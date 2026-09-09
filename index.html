@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Manager - Professional ERP</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f4f8', 100: '#d9e2ec', 500: '#334e68', 600: '#243b53', 700: '#102a43', 900: '#0f172a' },
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af' },
+                        slate: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 800: '#1e293b', 900: '#0f172a' }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Input & Button Styles */
+        .input-field {
+            width: 100%; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.625rem 1rem;
+            outline: none; transition: all 0.2s; font-size: 0.875rem; background-color: #ffffff; color: #1e293b; font-weight: 500;
+        }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .input-field:disabled { background-color: #f1f5f9; cursor: not-allowed; opacity: 0.7; }
+        
+        .btn-primary {
+            background-color: #2563eb; color: white;
+            padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem;
+            transition: all 0.2s; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: none; cursor: pointer;
+        }
+        .btn-primary:hover { background-color: #1d4ed8; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { background-color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+        
+        .btn-secondary {
+            background-color: #ffffff; color: #334155; padding: 0.625rem 1.25rem; border-radius: 0.5rem;
+            font-weight: 600; font-size: 0.875rem; border: 1px solid #cbd5e1; transition: all 0.2s; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .btn-secondary:hover { background-color: #f1f5f9; border-color: #94a3b8; }
+        
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); }
+        .label-text { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.35rem; letter-spacing: 0.05em; }
+        
+        .hidden-view { display: none !important; }
+        
+        /* Toast Notification */
+        #toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+        .toast { padding: 1rem; border-radius: 0.5rem; color: white; font-weight: 500; font-size: 0.875rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 0.5rem; animation: slideIn 0.3s ease forwards; pointer-events: auto; }
+        .toast.success { background-color: #10b981; }
+        .toast.error { background-color: #ef4444; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* Login Background */
+        .login-bg { background-color: #0f172a; background-image: radial-gradient(circle at 50% -20%, #1e293b, #0f172a); }
+        .glass-panel { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
+
+        /* Compact Table Styles */
+        .table-compact th, .table-compact td { padding: 0.75rem 1rem; white-space: nowrap; width: 1%; }
+        .table-compact th:last-child, .table-compact td:last-child { width: auto; }
+
+        /* Live Stock Breakdown Table Styles */
+        .breakdown-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; }
+        .breakdown-table th { background-color: #5a52e5; color: white; padding: 0.5rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.7rem; border: 1px solid #4a42d5; }
+        .breakdown-table th:first-child { border-top-left-radius: 0.5rem; }
+        .breakdown-table th:last-child { border-top-right-radius: 0.5rem; }
+        .breakdown-table td { padding: 0.5rem; border: 1px solid #e2e8f0; color: #334155; }
+        .breakdown-table .variant-cell { background-color: #f8fafc; font-weight: 700; color: #1e293b; vertical-align: top; }
+        .breakdown-table .total-subtext { display: block; font-weight: normal; color: #6366f1; font-size: 0.7rem; margin-top: 0.2rem; }
+
+        .tab-btn { border-bottom: 2px solid transparent; padding-bottom: 0.5rem; color: #64748b; font-weight: 600; transition: all 0.2s; outline: none; border-radius: 0; background: transparent; cursor: pointer;}
+        .tab-btn.active { border-bottom-color: #4f46e5; color: #4f46e5; }
+        .tab-btn:hover:not(.active) { color: #1e293b; }
+        
+        /* Pivot Table Specific Styles (Old School Tabular format) */
+        .pivot-table { border-collapse: collapse; width: 100%; }
+        .pivot-table th, .pivot-table td { border: 1px solid #cbd5e1; padding: 0.4rem 0.75rem; vertical-align: middle; }
+        .pivot-table thead th { background-color: #2563eb; color: white; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-color: #1d4ed8; }
+        .pivot-table .model-row td { background-color: #f1f5f9; font-weight: 700; color: #1e293b; }
+        .pivot-table .variant-row td { background-color: #ffffff; font-weight: 600; color: #334155; }
+        .pivot-table .colour-row td { background-color: #ffffff; color: #475569; font-size: 0.8rem; }
+        .pivot-table .subtotal-row td { background-color: #e2e8f0; font-weight: 700; color: #0f172a; font-size: 0.8rem; }
+        .pivot-table .grand-total-row td { background-color: #1e293b; color: white; font-weight: 800; font-size: 0.9rem; border-color: #0f172a; }
+
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col">
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Custom Confirm Dialog -->
+    <div id="confirm-dialog" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[2000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-[slideIn_0.2s_ease]">
+            <h3 class="text-lg font-bold text-slate-800 mb-2" id="confirm-title">Confirm Action</h3>
+            <p class="text-slate-600 text-sm mb-6" id="confirm-message">Are you sure?</p>
+            <div class="flex justify-end gap-3">
+                <button id="confirm-cancel" class="btn-secondary">Cancel</button>
+                <button id="confirm-ok" class="btn-primary !bg-primary-600">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LOGIN SCREEN ==================== -->
+    <div id="login-screen" class="fixed inset-0 z-50 login-bg flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative z-10">
+            <div class="bg-brand-900 p-8 text-center relative overflow-hidden">
+                <i class="ph-fill ph-shield-check text-5xl text-blue-400 mb-3 drop-shadow-lg relative z-10"></i>
+                <h2 class="text-2xl font-bold text-white tracking-wide relative z-10">ERP Login</h2>
+                <p class="text-slate-400 text-sm mt-1 relative z-10" id="login-subtitle">Select your authorization level</p>
+            </div>
+            
+            <div class="p-8">
+                <!-- Role Selection -->
+                <div id="login-role-selection" class="space-y-4">
+                    <button onclick="selectLoginRole('superadmin')" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold py-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-3 text-lg border border-amber-200">
+                        <i class="ph-fill ph-crown text-amber-500 text-xl"></i> Super Admin
+                    </button>
+                    <button onclick="selectLoginRole('admin')" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-3 text-lg border border-blue-200">
+                        <i class="ph-fill ph-user-gear text-blue-600 text-xl"></i> Admin
+                    </button>
+                    <button onclick="selectLoginRole('user')" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-3 text-lg border border-emerald-200">
+                        <i class="ph-fill ph-user text-emerald-600 text-xl"></i> Location User
+                    </button>
+                </div>
+
+                <!-- Form Section (Hidden Initially) -->
+                <form id="login-form" class="space-y-5 hidden" onsubmit="handleLogin(event)">
+                    <div>
+                        <label class="label-text">Select Location Profile</label>
+                        <select id="login-location" class="input-field cursor-pointer" required>
+                            <option value="">-- Choose Profile --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label-text">PIN Code</label>
+                        <input type="password" id="login-pin" class="input-field text-center tracking-[0.5em] text-xl font-bold" placeholder="••••" maxlength="6" required />
+                    </div>
+                    <div class="pt-2 flex gap-3">
+                        <button type="button" onclick="backToRoles()" class="w-1/3 btn-secondary">Back</button>
+                        <button type="submit" id="btn-login" class="w-2/3 btn-primary text-base py-3">Access System</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="app-screen" class="hidden h-full flex w-full">
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-brand-900 text-slate-300 flex flex-col flex-shrink-0 z-20 shadow-xl border-r border-brand-800">
+            <div class="p-6 border-b border-brand-800 text-center relative overflow-hidden">
+                <i class="ph-fill ph-package text-4xl text-primary-500 mb-2"></i>
+                <h1 class="text-xl font-black text-white tracking-widest uppercase">STOCK HUB</h1>
+                <div class="mt-2 flex justify-center"><span id="ui-user-role" class="text-[10px] text-white font-bold uppercase tracking-widest bg-primary-600 px-3 py-1 rounded-full border border-primary-500 shadow-sm"></span></div>
+            </div>
+            
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <button onclick="switchView('dispatch')" id="nav-dispatch" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium hover:bg-brand-800 hover:text-white text-slate-300 bg-primary-600 !text-white shadow-md">
+                    <i class="ph ph-qr-code text-lg"></i> Dispatch / Scan
+                </button>
+                <button onclick="switchView('liveStock')" id="nav-liveStock" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium hover:bg-brand-800 hover:text-white text-slate-300">
+                    <i class="ph ph-presentation-chart text-lg"></i> Live Stock
+                </button>
+                <button onclick="switchView('reports')" id="nav-reports" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium hover:bg-brand-800 hover:text-white text-slate-300">
+                    <i class="ph ph-file-text text-lg"></i> Analytics & Reports
+                </button>
+                <button onclick="switchView('bulk')" id="nav-bulk" class="nav-btn hidden w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium hover:bg-brand-800 hover:text-white text-slate-300">
+                    <i class="ph ph-upload-simple text-lg"></i> Bulk Stock-In
+                </button>
+                <button onclick="switchView('adminSettings')" id="nav-adminSettings" class="nav-btn hidden w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium hover:bg-brand-800 hover:text-white text-slate-300">
+                    <i class="ph ph-users-three text-lg"></i> Manage Users
+                </button>
+                <button onclick="switchView('masterUpload')" id="nav-masterUpload" class="nav-btn hidden w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium hover:bg-brand-800 hover:text-white text-slate-300">
+                    <i class="ph ph-database text-lg"></i> Master Database
+                </button>
+                <button onclick="switchView('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-sm font-medium hover:bg-brand-800 hover:text-white text-slate-300">
+                    <i class="ph ph-gear text-lg"></i> My Settings
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-brand-800 bg-brand-900/80">
+                <div class="flex items-center gap-3 mb-4 px-2">
+                    <div id="ui-user-avatar" class="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center font-bold text-white shadow-md text-lg"></div>
+                    <div class="text-sm overflow-hidden">
+                        <p id="ui-user-loc" class="font-bold text-white truncate"></p>
+                        <p class="text-xs text-brand-100/70">Active Session</p>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 bg-brand-800 hover:bg-brand-700 text-slate-300 py-2.5 rounded-lg transition-all text-sm font-medium">
+                    <i class="ph ph-sign-out"></i> Secure Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8">
+            
+            <!-- VIEW: DISPATCH -->
+            <div id="view-dispatch" class="app-view max-w-5xl mx-auto space-y-6">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Dispatch & Scanning</h2>
+                        <p class="text-sm text-slate-500 mt-1">Process vehicle movements in real-time.</p>
+                    </div>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-200 shadow-sm">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Online
+                    </div>
+                </div>
+
+                <!-- 1. Transaction Setup (Action First) -->
+                <form id="dispatch-form" class="bg-white rounded-xl card-shadow border border-slate-200 p-6 relative z-30" onsubmit="submitTransaction(event)">
+                    <h3 class="font-bold text-primary-700 mb-5 border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <i class="ph-fill ph-paper-plane-right text-primary-500"></i> Finalize Transaction Setup
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                        <div>
+                            <label class="label-text text-primary-700">Action Type</label>
+                            <select id="txn-type" class="input-field font-bold text-primary-700 bg-primary-50 border-primary-200" required onchange="handleActionChange()">
+                                <option value="">- Select Action First -</option>
+                                <option value="IN">Stock-In (Receive)</option>
+                                <option value="OUT">Stock-Out (Sold)</option>
+                                <option value="TRANSFER">Stock-Transfer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-text">Date</label>
+                            <input type="date" id="txn-date" class="input-field" required>
+                        </div>
+                        
+                        <!-- Target Branch (Only for Superadmins/Admins doing IN) -->
+                        <div id="transfer-target-div" class="hidden">
+                            <label class="label-text text-amber-600" id="target-branch-label">Target Location</label>
+                            <select id="txn-transfer-target" class="input-field border-amber-200 bg-amber-50" onchange="populateSubLocations()"></select>
+                        </div>
+                        
+                        <!-- Specific Sub-location Dropdown -->
+                        <div id="subloc-div" class="hidden">
+                            <label class="label-text text-emerald-600" id="subloc-label">Target Inventory Godown</label>
+                            <select id="txn-subloc" class="input-field border-emerald-200 bg-emerald-50"></select>
+                        </div>
+
+                        <div class="lg:col-span-2" id="remark-div">
+                            <label class="label-text">Remarks / Reference</label>
+                            <input type="text" id="txn-remark" class="input-field" placeholder="Invoice no, driver name, etc.">
+                        </div>
+                    </div>
+                </form>
+
+                <!-- 2. Search Component -->
+                <div class="bg-white rounded-xl card-shadow border border-slate-200 p-2 relative z-20 opacity-50 transition-opacity" id="search-container">
+                    <div class="flex items-center border-2 border-primary-300 rounded-lg overflow-hidden focus-within:border-primary-500 transition-colors bg-white">
+                        <div class="pl-4 pr-2 text-slate-400"><i class="ph ph-magnifying-glass text-xl"></i></div>
+                        <input type="text" id="search-input" autocomplete="off" disabled class="w-full py-4 px-2 outline-none text-slate-700 font-bold placeholder-slate-400 text-lg" placeholder="Please select an Action Type above first...">
+                        <button class="bg-slate-800 text-white px-6 py-4 flex items-center gap-2 font-bold hover:bg-slate-900 transition-colors">
+                            <i class="ph ph-qr-code text-xl"></i> <span class="hidden sm:inline">Scan</span>
+                        </button>
+                    </div>
+                    <!-- Dropdown -->
+                    <div id="search-results" class="absolute w-full left-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl z-20 max-h-72 overflow-y-auto hidden">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- 3. Selected Table Component -->
+                <div class="bg-white rounded-xl card-shadow border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700 text-sm">Frames to Process <span id="selected-count" class="ml-2 bg-primary-100 text-primary-700 py-0.5 px-2 rounded-full text-xs">0</span></h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm table-compact">
+                            <thead class="bg-white text-slate-500 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th>Chassis / Frame No.</th>
+                                    <th>Vehicle Details</th>
+                                    <th>Current Status & Location</th>
+                                    <th class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="selected-table-body" class="divide-y divide-slate-100 bg-white">
+                                <tr><td colspan="4" class="p-8 text-center text-slate-400 italic text-sm">No frames added yet. Setup transaction and search above.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end">
+                        <button type="button" onclick="document.getElementById('dispatch-form').requestSubmit()" id="btn-submit-txn" disabled class="btn-primary px-8 opacity-50 cursor-not-allowed">
+                            Execute Transaction
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: NEW LIVE STOCK DASHBOARD -->
+            <div id="view-liveStock" class="app-view hidden-view mx-auto space-y-6 max-w-[1400px]">
+                <div class="flex justify-between items-end mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Live Stock</h2>
+                        <p class="text-sm text-slate-500 mt-1">Real-time inventory overview and raw data extraction.</p>
+                    </div>
+                    <button onclick="exportAllInvCSV()" class="btn-secondary text-primary-700 border-primary-200 bg-primary-50 hover:bg-primary-100 flex items-center gap-2 shadow-sm">
+                        <i class="ph-bold ph-download-simple"></i> Export All Stock
+                    </button>
+                </div>
+
+                <!-- Global Filters for Live Stock -->
+                <div class="bg-white p-4 rounded-xl card-shadow border border-slate-200 flex flex-wrap gap-4 items-end relative z-10">
+                    <div id="ls-filter-loc-div" class="hidden">
+                        <label class="label-text">Branch Filter (Admin)</label>
+                        <select id="ls-filter-loc" class="input-field py-2 min-w-[160px]" onchange="populateLsSubLocs()"></select>
+                    </div>
+                    <div>
+                        <label class="label-text text-emerald-600">Storage Location (Godown)</label>
+                        <select id="ls-filter-subloc" class="input-field py-2 min-w-[160px] border-emerald-200 bg-emerald-50" onchange="renderLiveStockViews()">
+                            <option value="ALL">All Storage Areas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabs Header -->
+                <div class="flex gap-6 border-b border-slate-200 mb-6 overflow-x-auto">
+                    <button type="button" onclick="switchLsTab('summary')" id="ls-tab-summary" class="tab-btn active flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-stack"></i> Summary</button>
+                    <button type="button" onclick="switchLsTab('raw')" id="ls-tab-raw" class="tab-btn flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-table"></i> Raw Data</button>
+                    <button type="button" onclick="switchLsTab('pivot')" id="ls-tab-pivot" class="tab-btn flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-tree-structure"></i> Pivot Report</button>
+                </div>
+
+                <!-- TAB: SUMMARY -->
+                <div id="ls-view-summary" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Left: Models List -->
+                    <div class="lg:col-span-5 xl:col-span-4 bg-white rounded-xl card-shadow border border-slate-200 overflow-hidden flex flex-col h-[calc(100vh-280px)] min-h-[400px]">
+                        <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">MODELS LIST</h3>
+                            <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-full text-slate-500 font-semibold">Qty High to Low</span>
+                        </div>
+                        <div class="overflow-y-auto flex-1">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-white text-slate-500 uppercase text-[10px] font-bold tracking-wider border-b border-slate-100 sticky top-0 shadow-sm z-10">
+                                    <tr>
+                                        <th class="p-3">Model Name</th>
+                                        <th class="p-3 text-center">Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ls-models-body" class="divide-y divide-slate-50">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-between items-center">
+                            <span class="font-bold text-slate-600 text-sm uppercase">Grand Total</span>
+                            <span id="ls-grand-total" class="font-black text-primary-700 text-xl">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Breakdown Details -->
+                    <div class="lg:col-span-7 xl:col-span-8 h-[calc(100vh-280px)] min-h-[400px] flex items-start">
+                        <div id="ls-breakdown-card" class="bg-white rounded-xl card-shadow border border-slate-200 overflow-hidden w-full hidden opacity-0 transition-opacity duration-300">
+                            <div class="bg-[#5a52e5] px-5 py-4 flex justify-between items-center">
+                                <h3 id="ls-bd-title" class="font-bold text-white text-sm uppercase tracking-wider">DETAILS: MODEL NAME</h3>
+                                <span class="text-[10px] text-white/80 font-bold uppercase tracking-widest">Breakdown</span>
+                            </div>
+                            <div class="p-0 overflow-x-auto max-h-[calc(100vh-340px)] overflow-y-auto">
+                                <table class="breakdown-table">
+                                    <thead class="sticky top-0 shadow-sm">
+                                        <tr>
+                                            <th class="w-1/3">Variant</th>
+                                            <th class="w-1/2">Colour</th>
+                                            <th class="w-1/6 text-center">Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ls-breakdown-body">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Placeholder when nothing clicked -->
+                        <div id="ls-breakdown-placeholder" class="w-full h-full flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                            <i class="ph ph-hand-pointing text-4xl mb-2 text-slate-300"></i>
+                            <p class="font-medium text-sm">Select a model from the list to view breakdown</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: RAW DATA -->
+                <div id="ls-view-raw" class="hidden h-[calc(100vh-240px)] flex flex-col">
+                    <div class="bg-white p-4 rounded-t-xl border border-slate-200 border-b-0 flex items-center justify-between">
+                        <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="ph-fill ph-chart-bar text-primary-500 text-lg"></i> Raw Live Stock</h3>
+                        <div class="relative w-72">
+                            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="ls-raw-search" oninput="renderLiveStockRaw()" placeholder="Search Any Column..." class="w-full border border-slate-200 rounded-full pl-9 pr-4 py-1.5 text-sm outline-none focus:border-primary-500 bg-slate-50">
+                        </div>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-b-xl overflow-hidden flex-1 flex flex-col shadow-sm">
+                        <div class="overflow-auto flex-1 relative">
+                            <table class="w-full text-left text-sm table-compact">
+                                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider sticky top-0 shadow-sm z-10 border-b border-slate-200">
+                                    <tr>
+                                        <th>Model Name</th>
+                                        <th>Model Variant</th>
+                                        <th>Colour</th>
+                                        <th>MTOC</th>
+                                        <th>Chassis No.</th>
+                                        <th>Engine No.</th>
+                                        <th>Storage Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ls-raw-body" class="divide-y divide-slate-100 bg-white">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-slate-50 px-4 py-2 border-t border-slate-200 text-xs text-slate-500 font-semibold flex justify-between">
+                            <span>Showing <span id="ls-raw-count" class="text-slate-800">0</span> records</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: PIVOT -->
+                <div id="ls-view-pivot" class="hidden flex-col h-[calc(100vh-240px)]">
+                    <!-- Pivot Controls -->
+                    <div class="bg-white p-4 rounded-t-xl border border-slate-200 border-b-0 flex flex-wrap gap-4 items-end justify-between">
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <div>
+                                <label class="label-text">Select Model</label>
+                                <select id="ls-pivot-model" onchange="renderLiveStockPivot()" class="input-field py-1.5 min-w-[200px] border-primary-300 bg-primary-50 text-primary-700 font-bold">
+                                    <option value="ALL">All Models</option>
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label-text">View Type</label>
+                                <select id="ls-pivot-view-type" onchange="renderLiveStockPivot()" class="input-field py-1.5 min-w-[180px] bg-slate-50">
+                                    <option value="breakdown">Location Breakdown</option>
+                                    <option value="total">Only Total</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Pivot Table -->
+                    <div class="bg-white border border-slate-200 rounded-b-xl overflow-hidden flex-1 flex flex-col shadow-sm">
+                        <div class="overflow-auto flex-1">
+                            <table class="pivot-table">
+                                <thead id="ls-pivot-head" class="sticky top-0 shadow-sm z-10">
+                                    <!-- Populated by JS -->
+                                </thead>
+                                <tbody id="ls-pivot-body" class="bg-white">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: REPORTS -->
+            <div id="view-reports" class="app-view hidden-view max-w-6xl mx-auto space-y-6">
+                <div class="flex justify-between items-end mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Analytics & Reports</h2>
+                        <p class="text-sm text-slate-500 mt-1">View transaction history and stock movements.</p>
+                    </div>
+                    <button onclick="exportReportCSV()" class="btn-secondary text-primary-700 border-primary-200 bg-primary-50 hover:bg-primary-100 flex items-center gap-2 shadow-sm">
+                        <i class="ph-bold ph-download-simple"></i> Export CSV
+                    </button>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl card-shadow border border-slate-200 flex flex-wrap gap-4 items-end z-10 relative">
+                    <div>
+                        <label class="label-text">Start Date</label>
+                        <input type="date" id="filter-start" class="input-field py-2" onchange="renderReports()">
+                    </div>
+                    <div>
+                        <label class="label-text">End Date</label>
+                        <input type="date" id="filter-end" class="input-field py-2" onchange="renderReports()">
+                    </div>
+                    <div>
+                        <label class="label-text">Transaction Type</label>
+                        <select id="filter-type" class="input-field py-2 min-w-[140px]" onchange="renderReports()">
+                            <option value="ALL">All Types</option>
+                            <option value="IN">Stock-In</option>
+                            <option value="OUT">Stock-Out</option>
+                            <option value="TRANSFER">Transfer</option>
+                        </select>
+                    </div>
+                    <div id="filter-loc-div" class="hidden">
+                        <label class="label-text">Location Filter</label>
+                        <select id="filter-loc" class="input-field py-2 min-w-[160px]" onchange="renderReports()">
+                            <option value="ALL">All Locations</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl card-shadow border-b-4 border-slate-500">
+                        <div class="label-text text-[10px]">Total Transactions</div>
+                        <div class="text-3xl font-black text-slate-800 mt-1" id="sum-total">0</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl card-shadow border-b-4 border-emerald-500">
+                        <div class="label-text text-[10px]">Stock In</div>
+                        <div class="text-3xl font-black text-emerald-600 mt-1" id="sum-in">0</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl card-shadow border-b-4 border-rose-500">
+                        <div class="label-text text-[10px]">Stock Out</div>
+                        <div class="text-3xl font-black text-rose-600 mt-1" id="sum-out">0</div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl card-shadow border-b-4 border-amber-500">
+                        <div class="label-text text-[10px]">Transfers</div>
+                        <div class="text-3xl font-black text-amber-600 mt-1" id="sum-transfer">0</div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl card-shadow border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm table-compact">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Chassis No</th>
+                                    <th>Model</th>
+                                    <th>Movement Details</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-table-body" class="divide-y divide-slate-100 bg-white">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: MASTER DATABASE UPLOAD -->
+            <div id="view-masterUpload" class="app-view hidden-view max-w-5xl mx-auto space-y-6">
+                <div class="mb-2">
+                    <h2 class="text-2xl font-bold text-slate-800">Master Database Upload</h2>
+                    <p class="text-sm text-slate-500 mt-1">Upload the complete vehicle master list directly from Excel.</p>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl card-shadow border border-slate-200">
+                    <div class="flex bg-amber-50 p-4 rounded-lg border border-amber-100 mb-6 gap-3 text-sm text-amber-800 font-medium">
+                        <i class="ph ph-warning-circle text-xl flex-shrink-0 text-amber-600"></i>
+                        <div>
+                            <p class="font-bold mb-1">Strict Column Format Required!</p>
+                            <p>Paste data directly from Excel. Columns MUST be in this exact order:</p>
+                            <p class="mt-2 text-[10px] font-mono bg-amber-100/50 p-2.5 rounded border border-amber-200 text-amber-900 overflow-x-auto whitespace-nowrap">
+                                SN | HMSI /OTHER | RECEIVED DATE | INVOICE DATE | MFG DATE | MODEL NAME | MODEL VARIANT | COLOUR | MTOC | CHASSIS NO. | ENGINE NO. | Type | HMSI INV AMOUNT | Taxable HMSI INV AMOUNT
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <label class="label-text">Paste Excel Data Here</label>
+                    <textarea id="masterDataInput" class="w-full h-64 input-field font-mono text-xs resize-y mb-5 bg-slate-50 whitespace-pre" placeholder="1&#9;HMSI&#9;01-01-2024&#9;..."></textarea>
+                    
+                    <button id="btnUploadMaster" onclick="executeMasterUpload()" class="btn-primary w-full sm:w-auto">
+                        <i class="ph ph-database text-lg"></i> Process & Upload Master Data
+                    </button>
+                    
+                    <div class="mt-8 pt-6 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-slate-800 text-sm">Current Master Database Status</h3>
+                            <span class="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-xs font-bold border border-primary-200" id="masterDbCount">0 Records</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: ADMIN SETTINGS (MANAGE USERS) -->
+            <div id="view-adminSettings" class="app-view hidden-view max-w-5xl mx-auto space-y-6">
+                <div class="mb-2">
+                    <h2 class="text-2xl font-bold text-slate-800">Manage Users & Branches</h2>
+                    <p class="text-sm text-slate-500 mt-1">Create or remove access for branches and personnel.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl card-shadow border border-slate-200 h-fit">
+                        <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Create New Branch Profile</h3>
+                        <form onsubmit="handleCreateUser(event)" class="space-y-4">
+                            <div>
+                                <label class="label-text">Unique Location ID</label>
+                                <input type="text" id="new-user-id" class="input-field uppercase" placeholder="e.g., LOC3" required>
+                                <p class="text-[10px] text-slate-400 mt-1">Short ID without spaces.</p>
+                            </div>
+                            <div>
+                                <label class="label-text">Display Name</label>
+                                <input type="text" id="new-user-name" class="input-field" placeholder="e.g., Siyana Branch" required>
+                            </div>
+                            <div>
+                                <label class="label-text">Role</label>
+                                <select id="new-user-role" class="input-field" required>
+                                    <option value="user">Location User</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="superadmin">Super Admin</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label-text">Initial PIN</label>
+                                <input type="text" id="new-user-pin" class="input-field" placeholder="4-6 Digits" maxlength="6" required>
+                            </div>
+                            <button type="submit" class="btn-primary w-full mt-2">Create User</button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white rounded-xl card-shadow border border-slate-200 overflow-hidden h-fit">
+                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-700 text-sm">Active Profiles</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm table-compact">
+                                <thead class="bg-white text-slate-500 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th class="text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body" class="divide-y divide-slate-100 bg-white">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: BULK UPLOAD -->
+            <div id="view-bulk" class="app-view hidden-view max-w-3xl mx-auto space-y-6">
+                <div class="mb-2">
+                    <h2 class="text-2xl font-bold text-slate-800">Bulk Stock-In</h2>
+                    <p class="text-sm text-slate-500 mt-1">Quickly receive large shipments into physical inventory.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl card-shadow border border-slate-200">
+                    <div class="grid grid-cols-2 gap-5 mb-5">
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="label-text text-primary-600">Target Physical Branch</label>
+                            <select id="bulk-target" class="input-field border-primary-200 bg-primary-50" onchange="populateBulkSubLocations()"></select>
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="label-text text-emerald-600">Target Sub-Location (Godown)</label>
+                            <select id="bulk-subloc" class="input-field border-emerald-200 bg-emerald-50"></select>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="label-text">Bulk Remark (Optional)</label>
+                            <input type="text" id="bulk-remark" class="input-field" placeholder="Initial Stock Setup">
+                        </div>
+                    </div>
+                    <label class="label-text mb-2">Paste Chassis Numbers (Separated by space or newline)</label>
+                    <textarea id="bulk-data" class="w-full h-64 input-field font-mono text-sm resize-y mb-5" placeholder="ME4HC154LSG095694&#10;ME4JC94EATD125693"></textarea>
+                    <button onclick="executeBulkUpload()" id="btn-bulk" class="btn-primary w-full">
+                        <i class="ph-bold ph-upload-simple"></i> Execute Bulk Stock-In
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW: SETTINGS -->
+            <div id="view-settings" class="app-view hidden-view max-w-5xl mx-auto space-y-6">
+                <div class="mb-2">
+                    <h2 class="text-2xl font-bold text-slate-800">My Settings</h2>
+                    <p class="text-sm text-slate-500 mt-1">Manage your account preferences and inventory zones.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Profile Name Card -->
+                    <div class="bg-white p-6 rounded-xl card-shadow border border-slate-200 h-fit">
+                        <h3 class="font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i class="ph-fill ph-user-circle text-blue-500"></i> Update Profile Name
+                        </h3>
+                        <form onsubmit="handleChangeName(event)" class="space-y-4">
+                            <div>
+                                <label class="label-text">Display Name</label>
+                                <input type="text" id="profile-name-input" class="input-field" required>
+                                <p class="text-[10px] text-slate-500 mt-1">This name appears in reports and headers.</p>
+                            </div>
+                            <div class="pt-2">
+                                <button type="submit" class="btn-primary w-full !bg-blue-600 hover:!bg-blue-700">Save Name</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Security Card -->
+                    <div class="bg-white p-6 rounded-xl card-shadow border border-slate-200 h-fit">
+                        <h3 class="font-bold text-slate-800 mb-5 border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i class="ph-fill ph-lock-key text-primary-500"></i> Change Account PIN
+                        </h3>
+                        <form onsubmit="handleChangePin(event)" class="space-y-4">
+                            <div>
+                                <label class="label-text">New PIN</label>
+                                <input type="password" id="pin-new" class="input-field text-lg tracking-[0.2em]" maxlength="6" required>
+                            </div>
+                            <div>
+                                <label class="label-text">Confirm New PIN</label>
+                                <input type="password" id="pin-confirm" class="input-field text-lg tracking-[0.2em]" maxlength="6" required>
+                            </div>
+                            <div class="pt-2">
+                                <button type="submit" class="btn-primary w-full">Update PIN</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Inventory Layout Card -->
+                    <div class="bg-white p-6 rounded-xl card-shadow border border-slate-200 h-fit lg:col-span-2">
+                        <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i class="ph-fill ph-warehouse text-emerald-500"></i> Manage Inventory Sub-Locations
+                            </h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4">Add or remove specific physical storage areas (like Godown 1, Main Showroom) within your branch.</p>
+                        
+                        <div class="flex gap-3 mb-5 max-w-md">
+                            <input type="text" id="new-subloc-input" class="input-field" placeholder="e.g. Godown 2">
+                            <button type="button" onclick="addSubLocation()" class="btn-secondary whitespace-nowrap !bg-slate-800 !text-white hover:!bg-slate-900 border-transparent">
+                                Add Area
+                            </button>
+                        </div>
+                        
+                        <ul id="settings-subloc-list" class="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- TRANSACTION DETAILS MODAL -->
+    <div id="txn-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden animate-[slideIn_0.2s_ease]">
+            <div class="bg-slate-800 px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="font-bold flex items-center gap-2"><i class="ph ph-receipt"></i> Transaction Details</h3>
+                <button onclick="closeModal()" class="text-slate-300 hover:text-white transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 md:p-8 space-y-6">
+                <div class="grid grid-cols-2 gap-y-6">
+                    <div>
+                        <span class="label-text text-[10px]">Date & Time</span>
+                        <span id="mod-date" class="font-bold text-slate-800 text-sm"></span>
+                    </div>
+                    <div>
+                        <span class="label-text text-[10px]">Type</span>
+                        <span id="mod-type" class="font-black text-primary-600 text-sm tracking-wide"></span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <span class="label-text text-[10px]">Chassis Number</span>
+                        <span id="mod-chassis" class="font-black text-slate-900 text-lg tracking-tight"></span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <span class="label-text text-[10px]">Vehicle Model</span>
+                        <span id="mod-model" class="font-bold text-slate-700 text-sm"></span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <span class="label-text text-[10px]">Model Variant</span>
+                        <span id="mod-variant" class="font-bold text-slate-700 text-sm"></span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <span class="label-text text-[10px]">Engine No</span>
+                        <span id="mod-engine" class="font-bold text-slate-700 text-sm"></span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <span class="label-text text-[10px]">Colour</span>
+                        <span id="mod-colour" class="font-bold text-slate-700 text-sm"></span>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <span class="label-text text-[10px]">MTOC</span>
+                        <span id="mod-mtoc" class="font-bold text-slate-700 text-sm"></span>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="label-text text-[10px]">Performed By</span>
+                        <span id="mod-user" class="font-bold text-slate-800 text-sm"></span>
+                    </div>
+                    
+                    <div class="col-span-2">
+                        <span class="label-text text-[10px] mb-1">Location Movement</span>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 font-bold text-slate-800 text-sm flex items-center flex-wrap gap-2">
+                            <span id="mod-from"></span>
+                            <i id="mod-arrow" class="ph-bold ph-arrow-right text-slate-400 hidden mx-1"></i>
+                            <span id="mod-to" class="hidden text-primary-700"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2">
+                        <span class="label-text text-[10px]">Remarks</span>
+                        <div id="mod-remark" class="text-sm text-slate-600 font-medium bg-amber-50 p-3 rounded-lg border border-amber-100 mt-1"></div>
+                    </div>
+                </div>
+                <div class="pt-6 text-right border-t border-slate-100 mt-2">
+                    <button onclick="closeModal()" class="btn-secondary px-8 w-full sm:w-auto">Close Window</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT TRANSACTION MODAL -->
+    <div id="edit-txn-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-[slideIn_0.2s_ease]">
+            <div class="bg-amber-500 px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="font-bold flex items-center gap-2"><i class="ph ph-pencil-simple"></i> Edit Transaction</h3>
+                <button onclick="closeEditModal()" class="text-white/80 hover:text-white transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit-txn-id">
+                <div>
+                    <label class="label-text">Date</label>
+                    <input type="date" id="edit-txn-date" class="input-field" required>
+                </div>
+                <div>
+                    <label class="label-text">Remarks</label>
+                    <input type="text" id="edit-txn-remark" class="input-field">
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+                    <button type="button" onclick="saveEditTransaction()" class="btn-primary !bg-amber-500 hover:!bg-amber-600 border-none text-white shadow-none">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE SDK & APP LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZdLotQUg7JsYpHt5rAfuuX5ypJ4DB81Q",
+            authDomain: "stockmanageruniversal.firebaseapp.com",
+            databaseURL: "https://stockmanageruniversal-default-rtdb.firebaseio.com",
+            projectId: "stockmanageruniversal",
+            storageBucket: "stockmanageruniversal.firebasestorage.app",
+            messagingSenderId: "570697433184",
+            appId: "1:570697433184:web:c5fa0953b67be621834305"
+        };
+        
+        let app, auth, db;
+        let globalUsers = [];
+        let globalVehicles = [];
+        let globalTxns = [];
+        let globalMasterVehicles = {}; 
+        let activeUser = null;
+        let activeRoleForLogin = null;
+        let selectedFrames = [];
+        let currentLiveStockData = {}; // Stores breakdown data
+
+        // Use local timezone to fix date bug
+        function getTodayLocal() {
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            return d.toISOString().split('T')[0];
+        }
+
+        window.showToast = function(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.innerHTML = type === 'success' ? `<i class="ph-bold ph-check-circle text-xl"></i> <span>${msg}</span>` : `<i class="ph-bold ph-warning-circle text-xl"></i> <span>${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+        };
+
+        window.customConfirm = function(message) {
+            return new Promise((resolve) => {
+                const dialog = document.getElementById('confirm-dialog');
+                document.getElementById('confirm-message').innerText = message;
+                dialog.classList.remove('hidden');
+                
+                const btnOk = document.getElementById('confirm-ok');
+                const btnCancel = document.getElementById('confirm-cancel');
+                
+                const cleanup = () => {
+                    dialog.classList.add('hidden');
+                    btnOk.removeEventListener('click', onOk);
+                    btnCancel.removeEventListener('click', onCancel);
+                };
+                
+                const onOk = () => { cleanup(); resolve(true); };
+                const onCancel = () => { cleanup(); resolve(false); };
+                
+                btnOk.addEventListener('click', onOk);
+                btnCancel.addEventListener('click', onCancel);
+            });
+        };
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getDatabase(app);
+
+            signInAnonymously(auth).catch(err => {
+                showToast("Auth Error: Enable Anonymous Auth in Firebase Console.", "error");
+                console.error(err);
+            });
+
+            onAuthStateChanged(auth, (user) => {
+                if(user) {
+                    setupDatabaseListeners();
+                }
+            });
+        } catch (error) {
+            console.error("Firebase init error:", error);
+            document.body.innerHTML = `<div class="p-10 text-red-600 font-bold">Failed to connect to Firebase. Check config.</div>`;
+        }
+
+        function setupDatabaseListeners() {
+            onValue(ref(db, 'locations'), (snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    seedDefaultUsers();
+                } else {
+                    globalUsers = Object.keys(data).map(key => {
+                        let u = { id: key, ...data[key] };
+                        if(!u.subLocations) u.subLocations = { 'default': 'Default' };
+                        return u;
+                    });
+                    
+                    if(!activeUser) renderLoginDropdowns();
+                    if(activeUser) {
+                        const updatedMe = globalUsers.find(x => x.id === activeUser.id);
+                        if(updatedMe) {
+                            activeUser = updatedMe;
+                            setupUIForUser(); // Update UI in case name changed
+                        }
+                        if(activeUser.role === 'superadmin') renderAdminUsersTable();
+                        if(document.getElementById('view-settings').classList.contains('hidden-view') === false) {
+                            renderSettingsSubLocations();
+                        }
+                    }
+                }
+            });
+
+            onValue(ref(db, 'vehicles'), (snapshot) => {
+                const data = snapshot.val();
+                globalVehicles = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+                if(activeUser) renderSelectedTable(); 
+                if(activeUser && !document.getElementById('view-liveStock').classList.contains('hidden-view')) {
+                    renderLiveStockViews();
+                }
+            });
+
+            onValue(ref(db, 'master_vehicles'), (snapshot) => {
+                const data = snapshot.val();
+                globalMasterVehicles = data || {};
+                const countEl = document.getElementById('masterDbCount');
+                if(countEl) countEl.innerText = `${Object.keys(globalMasterVehicles).length} Records`;
+                
+                if(activeUser && !document.getElementById('view-liveStock').classList.contains('hidden-view')) {
+                    renderLiveStockViews();
+                }
+            });
+
+            onValue(ref(db, 'transactions'), (snapshot) => {
+                const data = snapshot.val();
+                globalTxns = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
+                if(activeUser && document.getElementById('view-reports').classList.contains('hidden-view') === false) {
+                    renderReports();
+                }
+            });
+        }
+
+        async function seedDefaultUsers() {
+            const defaults = {
+                'HQ': { locationName: 'Ambuj Garg', role: 'superadmin', pin: '123456', subLocations: {'default':'Default'} },
+                'LOC2': { locationName: 'Main Branch', role: 'admin', pin: '2222', subLocations: {'default':'Default'} },
+                'LOC1': { locationName: 'Rajebabu Branch', role: 'user', pin: '1111', subLocations: {'default':'Default'} }
+            };
+            try { await set(ref(db, 'locations'), defaults); } catch(e) { console.error(e); }
+        }
+
+        window.selectLoginRole = function(role) {
+            activeRoleForLogin = role;
+            document.getElementById('login-role-selection').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('login-subtitle').innerText = `Logging in as ${role.toUpperCase()}`;
+            renderLoginDropdowns();
+        };
+
+        window.backToRoles = function() {
+            activeRoleForLogin = null;
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('login-role-selection').classList.remove('hidden');
+            document.getElementById('login-subtitle').innerText = `Select your authorization level`;
+        };
+
+        function renderLoginDropdowns() {
+            const select = document.getElementById('login-location');
+            if(!activeRoleForLogin) return;
+            const filteredUsers = globalUsers.filter(u => u.role === activeRoleForLogin);
+            select.innerHTML = '<option value="">-- Choose Profile --</option>' + 
+                filteredUsers.map(u => `<option value="${u.id}">${u.locationName}</option>`).join('');
+        }
+
+        window.handleLogin = function(e) {
+            e.preventDefault();
+            const locId = document.getElementById('login-location').value;
+            const pin = document.getElementById('login-pin').value;
+            const user = globalUsers.find(u => u.id === locId);
+            
+            if (user && user.pin === pin && user.role === activeRoleForLogin) {
+                activeUser = user;
+                setupUIForUser();
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                switchView('dispatch');
+            } else {
+                showToast("Invalid Location or PIN", "error");
+            }
+        };
+
+        window.handleLogout = function() {
+            activeUser = null;
+            selectedFrames = [];
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-pin').value = '';
+            backToRoles();
+        };
+
+        function setupUIForUser() {
+            document.getElementById('ui-user-loc').innerText = activeUser.locationName;
+            document.getElementById('ui-user-role').innerText = activeUser.role;
+            document.getElementById('ui-user-avatar').innerText = activeUser.locationName.charAt(0);
+            
+            const navBulk = document.getElementById('nav-bulk');
+            const navAdmin = document.getElementById('nav-adminSettings');
+            const navMaster = document.getElementById('nav-masterUpload');
+            const filterLocDiv = document.getElementById('filter-loc-div');
+            const lsFilterLocDiv = document.getElementById('ls-filter-loc-div');
+            
+            navBulk.classList.add('hidden'); navAdmin.classList.add('hidden'); navMaster.classList.add('hidden'); 
+            filterLocDiv.classList.add('hidden'); lsFilterLocDiv.classList.add('hidden');
+
+            if (activeUser.role === 'superadmin' || activeUser.role === 'admin') {
+                navBulk.classList.remove('hidden');
+                filterLocDiv.classList.remove('hidden');
+                lsFilterLocDiv.classList.remove('hidden');
+                
+                // Allow admin and superadmin to view reports/live stock from all NON-superadmin locations
+                const opts = '<option value="ALL">All Locations</option>' + globalUsers.filter(u => u.role !== 'superadmin').map(u => `<option value="${u.id}">${u.locationName}</option>`).join('');
+                document.getElementById('filter-loc').innerHTML = opts;
+                document.getElementById('ls-filter-loc').innerHTML = opts;
+            }
+
+            if (activeUser.role === 'superadmin') {
+                navAdmin.classList.remove('hidden');
+                navMaster.classList.remove('hidden');
+            }
+
+            const today = getTodayLocal();
+            document.getElementById('txn-date').value = today;
+            document.getElementById('filter-start').value = today;
+            document.getElementById('filter-end').value = today;
+
+            document.getElementById('txn-type').value = '';
+            handleActionChange(); 
+            populateLsSubLocs();
+        }
+
+        window.switchView = function(viewId) {
+            document.querySelectorAll('.app-view').forEach(v => v.classList.add('hidden-view'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('bg-primary-600', '!text-white', 'shadow-md');
+            });
+            document.getElementById(`view-${viewId}`).classList.remove('hidden-view');
+            document.getElementById(`nav-${viewId}`).classList.add('bg-primary-600', '!text-white', 'shadow-md');
+            
+            if(viewId === 'reports') renderReports();
+            if(viewId === 'liveStock') renderLiveStockViews();
+            if(viewId === 'adminSettings') renderAdminUsersTable();
+            if(viewId === 'settings') {
+                document.getElementById('profile-name-input').value = activeUser.locationName;
+                renderSettingsSubLocations();
+            }
+            if(viewId === 'bulk') {
+                const bulkTarget = document.getElementById('bulk-target');
+                if (activeUser.role === 'superadmin') {
+                    // Superadmin must choose a target location (excluding superadmins)
+                    bulkTarget.innerHTML = '<option value="">- Select Target Physical Branch -</option>' + 
+                        globalUsers.filter(u => u.role !== 'superadmin').map(u => `<option value="${u.id}">${u.locationName}</option>`).join('');
+                    bulkTarget.disabled = false;
+                } else {
+                    bulkTarget.innerHTML = `<option value="${activeUser.id}">${activeUser.locationName}</option>`;
+                    bulkTarget.disabled = true;
+                    populateBulkSubLocations();
+                }
+            }
+        };
+
+        window.handleActionChange = function() {
+            const type = document.getElementById('txn-type').value;
+            const targetDiv = document.getElementById('transfer-target-div');
+            const sublocDiv = document.getElementById('subloc-div');
+            const targetSelect = document.getElementById('txn-transfer-target');
+            const sublocSelect = document.getElementById('txn-subloc');
+            
+            selectedFrames = [];
+            renderSelectedTable();
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-results').classList.add('hidden');
+            
+            targetSelect.value = ''; sublocSelect.value = '';
+            targetDiv.classList.add('hidden'); sublocDiv.classList.add('hidden');
+            targetSelect.required = false; sublocSelect.required = false;
+            
+            const searchInput = document.getElementById('search-input');
+            const searchContainer = document.getElementById('search-container');
+            const btnSubmit = document.getElementById('btn-submit-txn');
+            
+            if(!type) {
+                searchInput.disabled = true;
+                searchContainer.classList.add('opacity-50');
+                searchInput.placeholder = "Please select an Action Type above first...";
+                btnSubmit.disabled = true;
+                btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            searchInput.disabled = false;
+            searchContainer.classList.remove('opacity-50');
+            
+            if (type === 'IN') {
+                searchInput.placeholder = "Scan/Search New Master DB Frames...";
+                if (activeUser.role === 'superadmin' || activeUser.role === 'admin') {
+                    targetDiv.classList.remove('hidden');
+                    targetSelect.required = true;
+                    targetSelect.innerHTML = '<option value="">- Select Target Branch -</option>' + 
+                        globalUsers.filter(u => u.role !== 'superadmin').map(u => `<option value="${u.id}">${u.locationName}</option>`).join('');
+                } else {
+                    populateSubLocations(activeUser.id);
+                }
+            } else if (type === 'OUT') {
+                searchInput.placeholder = "Scan/Search Your Current Inventory to Sell...";
+            } else if (type === 'TRANSFER') {
+                searchInput.placeholder = "Scan/Search Your Current Inventory to Transfer...";
+                // User can only transfer within their own sub-locations (Godowns)
+                populateSubLocations(activeUser.id);
+            }
+        };
+
+        window.populateSubLocations = function(forceBranchId = null) {
+            const branchId = forceBranchId || document.getElementById('txn-transfer-target').value;
+            const sublocDiv = document.getElementById('subloc-div');
+            const sublocSelect = document.getElementById('txn-subloc');
+
+            if(!branchId) {
+                sublocDiv.classList.add('hidden');
+                sublocSelect.required = false;
+                return;
+            }
+
+            const targetUser = globalUsers.find(u => u.id === branchId);
+            if(!targetUser) return;
+
+            const subs = targetUser.subLocations || { 'default': 'Default' };
+            sublocSelect.innerHTML = '<option value="">- Select Godown/Sub-Location -</option>' + 
+                Object.entries(subs).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+            
+            sublocDiv.classList.remove('hidden');
+            sublocSelect.required = true;
+        }
+
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.add('hidden');
+        });
+
+        function renderDropdown(results, query) {
+            searchResults.innerHTML = '';
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="p-4 text-center text-slate-500 text-sm">No matching frames found for this action.</div>';
+            } else {
+                results.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 border-b border-slate-50 hover:bg-primary-50 cursor-pointer flex justify-between items-center group";
+                    const highlightedStr = r.chassisNo.replace(new RegExp(query, 'gi'), match => `<span class="bg-amber-200 text-amber-900 px-0.5 rounded">${match}</span>`);
+                    
+                    div.innerHTML = `
+                        <div>
+                            <div class="font-bold text-slate-800 font-mono tracking-tight">${highlightedStr}</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wide">
+                                ${r.modelName} | ${r.colour} | ${r.engineNo}
+                            </div>
+                        </div>
+                        <button class="text-primary-600 bg-primary-100 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="ph-bold ph-plus text-lg"></i>
+                        </button>
+                    `;
+                    div.onclick = () => addFrame(r);
+                    searchResults.appendChild(div);
+                });
+            }
+            searchResults.classList.remove('hidden');
+        }
+
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim().toUpperCase();
+            if (query.length === 0) { searchResults.classList.add('hidden'); return; }
+
+            const type = document.getElementById('txn-type').value;
+            let results = [];
+
+            if (type === 'IN') {
+                // Search Master DB for IN
+                results = Object.keys(globalMasterVehicles)
+                    .filter(chassis => chassis.includes(query))
+                    .map(chassis => ({ chassisNo: chassis, ...globalMasterVehicles[chassis] }));
+            } else if (type === 'OUT' || type === 'TRANSFER') {
+                // Search Local Inventory for OUT/TRANSFER
+                results = globalVehicles.filter(v => 
+                    v.chassisNo.includes(query) && 
+                    v.status === 'In Stock' && 
+                    (v.currentLocation === activeUser.id || activeUser.role === 'superadmin')
+                );
+            }
+            
+            results = results.filter(r => !selectedFrames.some(sf => sf.chassisNo === r.chassisNo)).slice(0, 8);
+            renderDropdown(results, query);
+        });
+
+        function addFrame(rec) {
+            const dbRecord = globalVehicles.find(v => v.chassisNo === rec.chassisNo);
+            const currentLoc = dbRecord?.currentLocation || 'Unknown';
+            const currentSubLoc = dbRecord?.currentSubLocation || '';
+            const status = dbRecord?.status || 'Not in System';
+            
+            selectedFrames.push({ ...rec, currentLoc, currentSubLoc, status });
+            searchInput.value = '';
+            searchResults.classList.add('hidden');
+            renderSelectedTable();
+        }
+
+        window.removeFrame = function(chassisNo) {
+            selectedFrames = selectedFrames.filter(f => f.chassisNo !== chassisNo);
+            renderSelectedTable();
+        };
+
+        function getLocName(id, sublocId = null) {
+            const u = globalUsers.find(x => x.id === id);
+            let name = u ? u.locationName : id;
+            if(u && sublocId && u.subLocations && u.subLocations[sublocId]) {
+                name += ` (${u.subLocations[sublocId]})`;
+            } else if (sublocId) {
+                name += ` (${sublocId})`; 
+            }
+            return name;
+        }
+
+        function renderSelectedTable() {
+            const tbody = document.getElementById('selected-table-body');
+            document.getElementById('selected-count').innerText = selectedFrames.length;
+            const btnSubmit = document.getElementById('btn-submit-txn');
+            
+            if (selectedFrames.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 italic text-sm">No frames added yet. Setup transaction and search above.</td></tr>';
+                btnSubmit.disabled = true; btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            btnSubmit.disabled = false; btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+            tbody.innerHTML = '';
+            
+            selectedFrames.forEach(f => {
+                const liveRec = globalVehicles.find(v => v.chassisNo === f.chassisNo);
+                const stat = liveRec?.status || f.status;
+                const loc = liveRec?.currentLocation || f.currentLoc;
+                const subloc = liveRec?.currentSubLocation || f.currentSubLoc;
+                const statColor = stat === 'In Stock' ? 'bg-emerald-100 text-emerald-700' : stat === 'Sold' ? 'bg-slate-200 text-slate-700' : 'bg-amber-100 text-amber-700';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="font-bold text-primary-700 font-mono text-xs">${f.chassisNo}</td>
+                        <td>
+                            <div class="font-bold text-slate-800 text-xs">${f.modelName}</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">${f.colour}</div>
+                        </td>
+                        <td>
+                            <span class="px-2 py-1 rounded text-[10px] font-bold tracking-wide uppercase ${statColor}">
+                                ${stat} @ ${getLocName(loc, subloc)}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            <button type="button" onclick="removeFrame('${f.chassisNo}')" class="text-rose-500 hover:bg-rose-50 p-2 rounded transition-colors">
+                                <i class="ph-bold ph-trash text-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.submitTransaction = async function(e) {
+            e.preventDefault();
+            if(selectedFrames.length === 0) return;
+            
+            const type = document.getElementById('txn-type').value;
+            const date = document.getElementById('txn-date').value;
+            const remark = document.getElementById('txn-remark').value;
+            const targetBranchInput = document.getElementById('txn-transfer-target').value;
+            const subLocationId = document.getElementById('txn-subloc').value;
+
+            for(let frame of selectedFrames) {
+                const liveRec = globalVehicles.find(v => v.chassisNo === frame.chassisNo);
+                const isSystemStatusInStock = liveRec && liveRec.status === 'In Stock';
+                
+                if((type === 'OUT' || type === 'TRANSFER') && !isSystemStatusInStock) {
+                    return showToast(`Error: ${frame.chassisNo} must be "In Stock" first.`, "error");
+                }
+                if((type === 'OUT' || type === 'TRANSFER') && activeUser.role !== 'superadmin' && liveRec.currentLocation !== activeUser.id) {
+                    return showToast(`Error: ${frame.chassisNo} is not in your inventory.`, "error");
+                }
+            }
+
+            if((type === 'TRANSFER' || type === 'IN') && !subLocationId) {
+                return showToast("Please select a target Godown/Sub-location.", "error");
+            }
+
+            const btn = document.getElementById('btn-submit-txn');
+            btn.disabled = true; btn.innerHTML = 'Processing...';
+
+            try {
+                let updates = {};
+                const timestamp = new Date().toISOString();
+
+                for (let frame of selectedFrames) {
+                    const liveRec = globalVehicles.find(v => v.chassisNo === frame.chassisNo) || { currentLocation: 'Unknown' };
+                    let newStatus = '', newBranch = '', newSubLoc = ''; 
+                    
+                    let fromBranch = type === 'IN' ? 'Supplier' : (liveRec.currentLocation !== 'Unknown' ? liveRec.currentLocation : activeUser.id);
+                    let fromSubLoc = type === 'IN' ? '' : (liveRec.currentSubLocation || '');
+
+                    if (type === 'IN') {
+                        newStatus = 'In Stock';
+                        newBranch = (activeUser.role === 'superadmin' || activeUser.role === 'admin') ? targetBranchInput : activeUser.id;
+                        newSubLoc = subLocationId;
+                    } 
+                    else if (type === 'OUT') {
+                        newStatus = 'Sold';
+                        newBranch = 'Customer';
+                        newSubLoc = '';
+                    } 
+                    else if (type === 'TRANSFER') {
+                        newStatus = 'In Stock'; 
+                        // Transfer logic: User can only transfer within their own location. Superadmin stays manual logic if needed, but we locked it to activeUser.id in handleActionChange.
+                        newBranch = liveRec.currentLocation !== 'Unknown' ? liveRec.currentLocation : activeUser.id;
+                        newSubLoc = subLocationId;
+                    }
+
+                    let vari = frame.modelVariant || '';
+                    let mto = frame.mtoc || '';
+                    if(!vari && globalMasterVehicles[frame.chassisNo]) vari = globalMasterVehicles[frame.chassisNo].modelVariant || '';
+                    if(!mto && globalMasterVehicles[frame.chassisNo]) mto = globalMasterVehicles[frame.chassisNo].mtoc || '';
+
+                    updates[`vehicles/${frame.chassisNo}`] = {
+                        chassisNo: frame.chassisNo, engineNo: frame.engineNo, modelName: frame.modelName, 
+                        modelVariant: vari, colour: frame.colour, mtoc: mto,
+                        status: newStatus, currentLocation: newBranch, currentSubLocation: newSubLoc, lastUpdated: timestamp
+                    };
+
+                    const logKey = push(ref(db, 'transactions')).key;
+                    updates[`transactions/${logKey}`] = {
+                        chassisNo: frame.chassisNo, modelName: frame.modelName, type: type, date: date,
+                        fromLocation: fromBranch, fromSubLocation: fromSubLoc,
+                        toLocation: newBranch, toSubLocation: newSubLoc,
+                        remark: remark, performedBy: activeUser.locationName, timestamp: timestamp
+                    };
+                }
+
+                await update(ref(db), updates);
+                showToast(`Successfully processed ${selectedFrames.length} items!`);
+                
+                document.getElementById('dispatch-form').reset();
+                document.getElementById('txn-date').value = date; 
+                handleActionChange();
+            } catch (err) {
+                showToast(err.message, "error");
+            } finally {
+                btn.disabled = false; btn.innerHTML = 'Execute Transaction';
+            }
+        };
+
+        window.switchLsTab = function(tab) {
+            document.getElementById('ls-tab-summary').classList.remove('active');
+            document.getElementById('ls-tab-raw').classList.remove('active');
+            document.getElementById('ls-tab-pivot').classList.remove('active');
+            document.getElementById('ls-view-summary').classList.add('hidden');
+            document.getElementById('ls-view-raw').classList.add('hidden');
+            document.getElementById('ls-view-pivot').classList.add('hidden');
+            
+            if(tab === 'summary') {
+                document.getElementById('ls-tab-summary').classList.add('active');
+                document.getElementById('ls-view-summary').classList.remove('hidden');
+                document.getElementById('ls-view-summary').classList.add('grid');
+            } else if (tab === 'raw') {
+                document.getElementById('ls-tab-raw').classList.add('active');
+                document.getElementById('ls-view-raw').classList.remove('hidden');
+                document.getElementById('ls-view-raw').classList.add('flex');
+            } else if (tab === 'pivot') {
+                document.getElementById('ls-tab-pivot').classList.add('active');
+                document.getElementById('ls-view-pivot').classList.remove('hidden');
+                document.getElementById('ls-view-pivot').classList.add('flex');
+                renderLiveStockPivot(); 
+            }
+        }
+
+        window.populateLsSubLocs = function() {
+            const locFilter = (activeUser.role === 'superadmin' || activeUser.role === 'admin') ? document.getElementById('ls-filter-loc').value : activeUser.id;
+            const subSelect = document.getElementById('ls-filter-subloc');
+            
+            subSelect.innerHTML = '<option value="ALL">All Storage Areas</option>';
+            if(locFilter !== 'ALL') {
+                const user = globalUsers.find(u => u.id === locFilter);
+                if(user && user.subLocations) {
+                    Object.entries(user.subLocations).forEach(([k, v]) => {
+                        subSelect.innerHTML += `<option value="${k}">${v}</option>`;
+                    });
+                }
+            }
+            renderLiveStockViews();
+        }
+
+        function getFilteredLiveStock() {
+            const locFilter = (activeUser.role === 'superadmin' || activeUser.role === 'admin') ? document.getElementById('ls-filter-loc').value : activeUser.id;
+            const subLocFilter = document.getElementById('ls-filter-subloc').value;
+
+            let inStock = globalVehicles.filter(v => v.status === 'In Stock');
+            if(locFilter !== 'ALL') inStock = inStock.filter(v => v.currentLocation === locFilter);
+            if(subLocFilter !== 'ALL') inStock = inStock.filter(v => v.currentSubLocation === subLocFilter);
+            
+            return inStock;
+        }
+
+        window.renderLiveStockViews = function() {
+            renderLiveStockSummary();
+            renderLiveStockRaw();
+            renderLiveStockPivot();
+            document.getElementById('ls-breakdown-card').classList.add('hidden', 'opacity-0');
+            document.getElementById('ls-breakdown-placeholder').classList.remove('hidden');
+            document.getElementById('ls-breakdown-placeholder').classList.add('flex');
+        }
+
+        window.renderLiveStockSummary = function() {
+            const inStock = getFilteredLiveStock();
+            currentLiveStockData = {};
+            let grandTotal = 0;
+
+            inStock.forEach(v => {
+                const model = v.modelName || 'UNKNOWN MODEL';
+                let vari = v.modelVariant || (globalMasterVehicles[v.chassisNo] ? globalMasterVehicles[v.chassisNo].modelVariant : '');
+                if(!vari) vari = 'UNKNOWN VARIANT';
+                const col = v.colour || 'UNKNOWN COLOUR';
+
+                if(!currentLiveStockData[model]) currentLiveStockData[model] = { total: 0, variants: {} };
+                if(!currentLiveStockData[model].variants[vari]) currentLiveStockData[model].variants[vari] = { total: 0, colours: {} };
+                if(!currentLiveStockData[model].variants[vari].colours[col]) currentLiveStockData[model].variants[vari].colours[col] = 0;
+
+                currentLiveStockData[model].total++;
+                currentLiveStockData[model].variants[vari].total++;
+                currentLiveStockData[model].variants[vari].colours[col]++;
+                grandTotal++;
+            });
+
+            const sortedModels = Object.keys(currentLiveStockData).sort((a,b) => currentLiveStockData[b].total - currentLiveStockData[a].total);
+            const tbody = document.getElementById('ls-models-body');
+            tbody.innerHTML = '';
+            
+            if(sortedModels.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-slate-400 italic text-xs">No active inventory found.</td></tr>`;
+            } else {
+                sortedModels.forEach(model => {
+                    const total = currentLiveStockData[model].total;
+                    const escapedModel = model.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    tbody.innerHTML += `
+                        <tr onclick="showModelBreakdown('${escapedModel}')" class="cursor-pointer hover:bg-primary-50 transition-colors border-l-4 border-transparent hover:border-primary-500 group">
+                            <td class="p-3 font-semibold text-slate-700 text-xs group-hover:text-primary-700">${model}</td>
+                            <td class="p-3 text-center font-bold text-primary-600">${total}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('ls-grand-total').innerText = grandTotal;
+        }
+
+        window.showModelBreakdown = function(modelName) {
+            document.getElementById('ls-breakdown-placeholder').classList.add('hidden');
+            document.getElementById('ls-breakdown-placeholder').classList.remove('flex');
+            const card = document.getElementById('ls-breakdown-card');
+            card.classList.remove('hidden');
+            setTimeout(() => card.classList.remove('opacity-0'), 50);
+
+            document.getElementById('ls-bd-title').innerText = `DETAILS: ${modelName}`;
+            const data = currentLiveStockData[modelName];
+            const tbody = document.getElementById('ls-breakdown-body');
+            tbody.innerHTML = '';
+
+            if(!data) return;
+
+            Object.keys(data.variants).sort().forEach(vari => {
+                const varData = data.variants[vari];
+                const coloursList = Object.keys(varData.colours).sort();
+                const rowSpan = coloursList.length;
+
+                coloursList.forEach((col, index) => {
+                    const qty = varData.colours[col];
+                    let rowHtml = `<tr class="hover:bg-slate-50">`;
+                    if(index === 0) {
+                        rowHtml += `<td class="variant-cell" rowspan="${rowSpan}">
+                                        ${vari} <span class="total-subtext">(Total: ${varData.total})</span>
+                                    </td>`;
+                    }
+                    rowHtml += `
+                        <td class="text-xs italic">${col}</td>
+                        <td class="text-center font-bold text-slate-700 text-xs">${qty}</td>
+                    </tr>`;
+                    tbody.innerHTML += rowHtml;
+                });
+            });
+        }
+
+        window.renderLiveStockRaw = function() {
+            const inStock = getFilteredLiveStock();
+            const searchTerm = document.getElementById('ls-raw-search').value.toLowerCase().trim();
+            
+            let filteredRaw = inStock;
+            if(searchTerm) {
+                filteredRaw = inStock.filter(v => {
+                    let vari = v.modelVariant || (globalMasterVehicles[v.chassisNo] ? globalMasterVehicles[v.chassisNo].modelVariant : '');
+                    let mto = v.mtoc || (globalMasterVehicles[v.chassisNo] ? globalMasterVehicles[v.chassisNo].mtoc : '');
+                    const str = `${v.modelName} ${vari} ${v.colour} ${mto} ${v.chassisNo} ${v.engineNo}`.toLowerCase();
+                    return str.includes(searchTerm);
+                });
+            }
+
+            const tbody = document.getElementById('ls-raw-body');
+            tbody.innerHTML = '';
+
+            filteredRaw.forEach(f => {
+                let vari = f.modelVariant || (globalMasterVehicles[f.chassisNo] ? globalMasterVehicles[f.chassisNo].modelVariant : '');
+                let mto = f.mtoc || (globalMasterVehicles[f.chassisNo] ? globalMasterVehicles[f.chassisNo].mtoc : '');
+                
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="font-semibold text-slate-700">${f.modelName || '-'}</td>
+                        <td class="text-slate-600">${vari || '-'}</td>
+                        <td class="text-slate-600">${f.colour || '-'}</td>
+                        <td class="text-slate-500 font-mono text-[10px]">${mto || '-'}</td>
+                        <td class="font-bold text-primary-700 font-mono text-xs">${f.chassisNo}</td>
+                        <td class="text-slate-500 font-mono text-xs">${f.engineNo || '-'}</td>
+                        <td class="text-slate-500 text-xs">${getLocName(f.currentLocation, f.currentSubLocation)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('ls-raw-count').innerText = filteredRaw.length;
+        }
+
+        window.renderLiveStockPivot = function() {
+            const inStock = getFilteredLiveStock();
+            const viewType = document.getElementById('ls-pivot-view-type')?.value || 'breakdown';
+            const locFilter = (activeUser.role === 'superadmin' || activeUser.role === 'admin') ? document.getElementById('ls-filter-loc').value : activeUser.id;
+            
+            const modelSelect = document.getElementById('ls-pivot-model');
+            const selectedModelFilter = modelSelect ? modelSelect.value : 'ALL';
+            
+            const availableModels = [...new Set(inStock.map(v => v.modelName || 'UNKNOWN MODEL'))].sort();
+            if (modelSelect) {
+                const prevVal = modelSelect.value;
+                modelSelect.innerHTML = '<option value="ALL">All Models</option>' + 
+                    availableModels.map(m => `<option value="${m.replace(/"/g, '&quot;')}">${m}</option>`).join('');
+                if(availableModels.includes(prevVal)) modelSelect.value = prevVal;
+            }
+
+            let filteredForPivot = inStock;
+            if (selectedModelFilter !== 'ALL') {
+                filteredForPivot = inStock.filter(v => (v.modelName || 'UNKNOWN MODEL') === selectedModelFilter);
+            }
+
+            let columns = []; 
+            const isBranchLevel = ((activeUser.role === 'superadmin' || activeUser.role === 'admin') && locFilter === 'ALL');
+
+            if (viewType === 'breakdown') {
+                if (isBranchLevel) {
+                    const activeBranches = [...new Set(filteredForPivot.map(v => v.currentLocation))];
+                    columns = activeBranches.map(id => ({ key: id, name: globalUsers.find(u => u.id === id)?.locationName || id }));
+                } else {
+                    const branchUser = globalUsers.find(u => u.id === (locFilter === 'ALL' ? activeUser.id : locFilter));
+                    const subs = branchUser?.subLocations || { 'default': 'Default' };
+                    const activeSubs = [...new Set(filteredForPivot.map(v => v.currentSubLocation || 'default'))];
+                    columns = activeSubs.map(key => ({ key: key, name: subs[key] || key }));
+                }
+            }
+
+            let showTotalCol = (columns.length > 1) || (viewType === 'total');
+            if (viewType === 'total') {
+                columns = [];
+                showTotalCol = true;
+            }
+
+            const pivotData = {};
+            let colTotals = {};
+            columns.forEach(c => colTotals[c.key] = 0);
+            let grandTotal = 0;
+
+            filteredForPivot.forEach(v => {
+                const model = v.modelName || 'UNKNOWN MODEL';
+                let vari = v.modelVariant || (globalMasterVehicles[v.chassisNo] ? globalMasterVehicles[v.chassisNo].modelVariant : '');
+                if(!vari) vari = 'UNKNOWN VARIANT';
+                const col = v.colour || 'UNKNOWN COLOUR';
+                const locKey = isBranchLevel ? v.currentLocation : (v.currentSubLocation || 'default');
+
+                if (!pivotData[model]) pivotData[model] = { total: 0, locs: {}, variants: {} };
+                if (!pivotData[model].locs[locKey]) pivotData[model].locs[locKey] = 0;
+                
+                if (!pivotData[model].variants[vari]) pivotData[model].variants[vari] = { total: 0, locs: {}, colours: {} };
+                if (!pivotData[model].variants[vari].locs[locKey]) pivotData[model].variants[vari].locs[locKey] = 0;
+                
+                if (!pivotData[model].variants[vari].colours[col]) pivotData[model].variants[vari].colours[col] = { total: 0, locs: {} };
+                if (!pivotData[model].variants[vari].colours[col].locs[locKey]) pivotData[model].variants[vari].colours[col].locs[locKey] = 0;
+
+                pivotData[model].total++;
+                pivotData[model].locs[locKey]++;
+                pivotData[model].variants[vari].total++;
+                pivotData[model].variants[vari].locs[locKey]++;
+                pivotData[model].variants[vari].colours[col].total++;
+                pivotData[model].variants[vari].colours[col].locs[locKey]++;
+                
+                if(colTotals[locKey] !== undefined) colTotals[locKey]++;
+                grandTotal++;
+            });
+
+            // Build Header
+            const thead = document.getElementById('ls-pivot-head');
+            let headHtml = `<tr>
+                <th class="text-left w-1/4 bg-primary-600 text-white">Model</th>
+                <th class="text-left w-1/4 bg-primary-600 text-white">Variant</th>
+                <th class="text-left w-1/4 bg-primary-600 text-white">Colour</th>`;
+            columns.forEach(c => { headHtml += `<th class="text-center bg-primary-600 text-white">${c.name}</th>`; });
+            if (showTotalCol) {
+                headHtml += `<th class="text-center bg-brand-900 text-white w-24">Total</th>`;
+            }
+            headHtml += `</tr>`;
+            thead.innerHTML = headHtml;
+
+            // Build Body (Old School Tabular Pivot)
+            const tbody = document.getElementById('ls-pivot-body');
+            tbody.innerHTML = '';
+
+            if (Object.keys(pivotData).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${columns.length + 4}" class="p-8 text-center text-slate-400 italic">No inventory available for pivot report.</td></tr>`;
+                return;
+            }
+
+            const sortedModels = Object.keys(pivotData).sort();
+            
+            sortedModels.forEach(model => {
+                const mData = pivotData[model];
+                const sortedVariants = Object.keys(mData.variants).sort();
+                
+                let modelRowSpan = 0;
+                sortedVariants.forEach(vari => {
+                    modelRowSpan += Object.keys(mData.variants[vari].colours).length + 1; // +1 for Variant Total
+                });
+
+                let isFirstVariantOfModel = true;
+                
+                sortedVariants.forEach(vari => {
+                    const vData = mData.variants[vari];
+                    const sortedColours = Object.keys(vData.colours).sort();
+                    const variantRowSpan = sortedColours.length; 
+                    
+                    let isFirstColourOfVariant = true;
+                    
+                    sortedColours.forEach(col => {
+                        const cData = vData.colours[col];
+                        let cRow = `<tr class="colour-row">`;
+                        
+                        // Model Cell (Merged)
+                        if (isFirstVariantOfModel && isFirstColourOfVariant) {
+                            cRow += `<td class="model-row" rowspan="${modelRowSpan}"><i class="ph-bold ph-minus-square mr-1 text-slate-400"></i>${model}</td>`;
+                        }
+                        
+                        // Variant Cell (Merged)
+                        if (isFirstColourOfVariant) {
+                            cRow += `<td class="variant-row" rowspan="${variantRowSpan}">${vari}</td>`;
+                        }
+                        
+                        // Colour Cell
+                        cRow += `<td>${col}</td>`;
+                        
+                        // Location Data Cells
+                        columns.forEach(c => { 
+                            const val = cData.locs[c.key] || '';
+                            cRow += `<td class="text-center">${val}</td>`; 
+                        });
+                        
+                        // Total Data Cell
+                        if (showTotalCol) {
+                            cRow += `<td class="text-center font-bold text-slate-700 bg-slate-50">${cData.total || ''}</td>`;
+                        }
+                        
+                        cRow += `</tr>`;
+                        tbody.innerHTML += cRow;
+                        
+                        isFirstColourOfVariant = false;
+                        isFirstVariantOfModel = false;
+                    });
+                    
+                    // Variant Subtotal Row
+                    let subRow = `<tr class="subtotal-row">`;
+                    subRow += `<td colspan="2" class="text-right uppercase tracking-wider text-[10px]">Variant Total</td>`;
+                    
+                    columns.forEach(c => { 
+                        const val = vData.locs[c.key] || '';
+                        subRow += `<td class="text-center">${val}</td>`; 
+                    });
+                    
+                    if (showTotalCol) {
+                        subRow += `<td class="text-center">${vData.total}</td>`;
+                    }
+                    
+                    subRow += `</tr>`;
+                    tbody.innerHTML += subRow;
+                });
+            });
+
+            // Grand Total Row
+            let tRow = `<tr class="grand-total-row"><td colspan="3" class="text-right uppercase tracking-widest text-sm">Grand Total</td>`;
+            columns.forEach(c => { tRow += `<td class="text-center">${colTotals[c.key] || 0}</td>`; });
+            if (showTotalCol) {
+                tRow += `<td class="text-center text-lg">${grandTotal}</td>`;
+            }
+            tRow += `</tr>`;
+            tbody.innerHTML += tRow;
+        }
+
+        window.exportAllInvCSV = function() {
+            const inStock = getFilteredLiveStock();
+            if(inStock.length === 0) return showToast("No data to export", "error");
+            
+            let csv = "Chassis No,Engine No,Model Name,Model Variant,Colour,MTOC,Branch,Godown,Status Date,Age (Days)\n";
+            const now = new Date();
+            inStock.forEach(f => {
+                let vari = f.modelVariant || (globalMasterVehicles[f.chassisNo] ? globalMasterVehicles[f.chassisNo].modelVariant : '');
+                let mto = f.mtoc || (globalMasterVehicles[f.chassisNo] ? globalMasterVehicles[f.chassisNo].mtoc : '');
+                let loc = (globalUsers.find(u => u.id === f.currentLocation)?.locationName || f.currentLocation).replace(/,/g, '');
+                let sloc = f.currentSubLocation ? getLocName(f.currentLocation, f.currentSubLocation).split('(')[1].replace(')','') : '';
+                const ageDays = f.lastUpdated ? Math.floor((now - new Date(f.lastUpdated)) / (1000 * 60 * 60 * 24)) : 0;
+                csv += `${f.chassisNo},${f.engineNo},"${f.modelName}","${vari}","${f.colour}","${mto}",${loc},${sloc},${f.lastUpdated.split('T')[0]},${ageDays}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Live_Inventory_Full.csv`);
+            a.click();
+        };
+
+        window.renderReports = function() {
+            const start = document.getElementById('filter-start').value;
+            const end = document.getElementById('filter-end').value;
+            const type = document.getElementById('filter-type').value;
+            const loc = (activeUser.role === 'superadmin' || activeUser.role === 'admin') ? document.getElementById('filter-loc').value : activeUser.id;
+
+            let filtered = globalTxns.filter(t => {
+                let mDate = t.date >= start && t.date <= end;
+                let mType = type === 'ALL' || t.type === type;
+                let mLoc = loc === 'ALL' || t.fromLocation === loc || t.toLocation === loc;
+                return mDate && mType && mLoc;
+            }).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            let sumIn = 0, sumOut = 0, sumTrans = 0;
+            const tbody = document.getElementById('reports-table-body');
+            tbody.innerHTML = '';
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 text-sm italic">No records found for selected filters.</td></tr>`;
+            } else {
+                filtered.forEach(t => {
+                    if(t.type === 'IN') sumIn++;
+                    if(t.type === 'OUT') sumOut++;
+                    if(t.type === 'TRANSFER') sumTrans++;
+
+                    const typeBadge = t.type === 'IN' ? 'bg-emerald-100 text-emerald-700' : t.type === 'OUT' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700';
+                    let moveText = '';
+                    if(t.type==='IN') moveText = `Recv @ ${getLocName(t.toLocation, t.toSubLocation)}`;
+                    if(t.type==='OUT') moveText = `Sold from ${getLocName(t.fromLocation, t.fromSubLocation)}`;
+                    if(t.type==='TRANSFER') moveText = `${getLocName(t.fromLocation, t.fromSubLocation)} → ${getLocName(t.toLocation, t.toSubLocation)}`;
+
+                    const todayStr = getTodayLocal();
+                    const isSameDay = t.date === todayStr;
+                    const isCreatorLoc = t.fromLocation === activeUser.id || t.toLocation === activeUser.id; 
+                    // Admin & Superadmin can edit ANY transaction. Users can only edit same-day transactions they created.
+                    const canModify = (activeUser.role === 'superadmin' || activeUser.role === 'admin') || (isCreatorLoc && isSameDay);
+                    
+                    const escapedJson = JSON.stringify(t).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50">
+                            <td class="text-xs font-medium text-slate-600 whitespace-nowrap">${t.date}</td>
+                            <td><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${typeBadge}">${t.type}</span></td>
+                            <td class="font-bold text-primary-700 font-mono text-xs">${t.chassisNo}</td>
+                            <td class="text-xs font-semibold text-slate-700 truncate max-w-[150px]">${t.modelName}</td>
+                            <td class="text-xs text-slate-500 max-w-[200px] leading-tight">${moveText}</td>
+                            <td class="text-center">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button onclick="viewDetails('${escapedJson}')" class="text-primary-600 hover:bg-primary-50 p-1.5 rounded transition-colors" title="View Details">
+                                        <i class="ph-bold ph-eye text-lg"></i>
+                                    </button>
+                                    ${canModify ? `
+                                    <button onclick="editTransaction('${t.id}')" class="text-amber-500 hover:bg-amber-50 p-1.5 rounded transition-colors" title="Edit Remark/Date">
+                                        <i class="ph-bold ph-pencil-simple text-lg"></i>
+                                    </button>
+                                    <button onclick="deleteTransaction('${t.id}')" class="text-rose-500 hover:bg-rose-50 p-1.5 rounded transition-colors" title="Delete & Revert Status">
+                                        <i class="ph-bold ph-trash text-lg"></i>
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('sum-total').innerText = filtered.length;
+            document.getElementById('sum-in').innerText = sumIn;
+            document.getElementById('sum-out').innerText = sumOut;
+            document.getElementById('sum-transfer').innerText = sumTrans;
+        };
+
+        window.editTransaction = function(txnId) {
+            const txn = globalTxns.find(t => t.id === txnId);
+            if(!txn) return;
+            document.getElementById('edit-txn-id').value = txn.id;
+            document.getElementById('edit-txn-date').value = txn.date;
+            document.getElementById('edit-txn-remark').value = txn.remark || '';
+            document.getElementById('edit-txn-modal').classList.remove('hidden');
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('edit-txn-modal').classList.add('hidden');
+        };
+
+        window.saveEditTransaction = async function() {
+            const txnId = document.getElementById('edit-txn-id').value;
+            const newDate = document.getElementById('edit-txn-date').value;
+            const newRemark = document.getElementById('edit-txn-remark').value;
+            
+            try {
+                await update(ref(db, `transactions/${txnId}`), { date: newDate, remark: newRemark });
+                showToast("Transaction updated successfully!");
+                closeEditModal();
+            } catch(err) {
+                showToast("Error updating: " + err.message, "error");
+            }
+        };
+
+        window.deleteTransaction = async function(txnId) {
+            const txn = globalTxns.find(t => t.id === txnId);
+            if(!txn) return;
+            
+            const confirmed = await customConfirm(`Delete transaction for ${txn.chassisNo}? Status will revert.`);
+            if(!confirmed) return;
+
+            try {
+                let updates = {};
+                updates[`transactions/${txnId}`] = null;
+                
+                if (txn.type === 'IN') {
+                    updates[`vehicles/${txn.chassisNo}/status`] = 'Not in System';
+                    updates[`vehicles/${txn.chassisNo}/currentLocation`] = 'Unknown';
+                    updates[`vehicles/${txn.chassisNo}/currentSubLocation`] = '';
+                } else if (txn.type === 'OUT' || txn.type === 'TRANSFER') {
+                    updates[`vehicles/${txn.chassisNo}/status`] = 'In Stock';
+                    updates[`vehicles/${txn.chassisNo}/currentLocation`] = txn.fromLocation;
+                    updates[`vehicles/${txn.chassisNo}/currentSubLocation`] = txn.fromSubLocation || '';
+                }
+
+                await update(ref(db), updates);
+                showToast("Transaction Deleted & Reverted.");
+            } catch(err) {
+                showToast("Error deleting", "error");
+            }
+        };
+
+        window.viewDetails = function(jsonStr) {
+            const t = JSON.parse(jsonStr);
+            document.getElementById('mod-date').innerText = new Date(t.timestamp).toLocaleString();
+            document.getElementById('mod-type').innerText = t.type;
+            document.getElementById('mod-chassis').innerText = t.chassisNo;
+            document.getElementById('mod-model').innerText = t.modelName;
+            document.getElementById('mod-user').innerText = t.performedBy;
+            
+            let mData = globalMasterVehicles[t.chassisNo] || {};
+            let vari = mData.modelVariant || '-';
+            let mtoc = mData.mtoc || '-';
+            let eng = mData.engineNo || '-';
+            let col = mData.colour || '-';
+
+            document.getElementById('mod-variant').innerText = vari;
+            document.getElementById('mod-engine').innerText = eng;
+            document.getElementById('mod-colour').innerText = col;
+            document.getElementById('mod-mtoc').innerText = mtoc;
+            
+            document.getElementById('mod-from').innerText = getLocName(t.fromLocation, t.fromSubLocation);
+            const toEl = document.getElementById('mod-to');
+            const arrowEl = document.getElementById('mod-arrow');
+            
+            if(t.type === 'TRANSFER' || t.type === 'IN') {
+                toEl.innerText = getLocName(t.toLocation, t.toSubLocation);
+                toEl.classList.remove('hidden'); arrowEl.classList.remove('hidden');
+                if(t.type === 'IN') document.getElementById('mod-from').innerText = 'Supplier/Factory';
+            } else {
+                toEl.classList.add('hidden'); arrowEl.classList.add('hidden');
+            }
+
+            document.getElementById('mod-remark').innerText = t.remark || 'No remark provided.';
+            document.getElementById('txn-modal').classList.remove('hidden');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('txn-modal').classList.add('hidden');
+        };
+
+        window.exportReportCSV = function() {
+            const start = document.getElementById('filter-start').value;
+            const end = document.getElementById('filter-end').value;
+            const type = document.getElementById('filter-type').value;
+            const loc = (activeUser.role === 'superadmin' || activeUser.role === 'admin') ? document.getElementById('filter-loc').value : activeUser.id;
+
+            let filtered = globalTxns.filter(t => {
+                let mDate = t.date >= start && t.date <= end;
+                let mType = type === 'ALL' || t.type === type;
+                let mLoc = loc === 'ALL' || t.fromLocation === loc || t.toLocation === loc;
+                return mDate && mType && mLoc;
+            }).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            let csv = "Date,Time,Type,Chassis No,Model,From Location,From Subloc,To Location,To Subloc,Performed By,Remark\n";
+            filtered.forEach(t => {
+                let fN = getLocName(t.fromLocation).replace(/,/g, '');
+                let fS = t.fromSubLocation ? getLocName(t.fromLocation, t.fromSubLocation).split('(')[1].replace(')','') : '';
+                let tN = getLocName(t.toLocation).replace(/,/g, '');
+                let tS = t.toSubLocation ? getLocName(t.toLocation, t.toSubLocation).split('(')[1].replace(')','') : '';
+                csv += `${t.date},${new Date(t.timestamp).toLocaleTimeString()},${t.type},${t.chassisNo},"${t.modelName}",${fN},${fS},${tN},${tS},"${t.performedBy}","${t.remark||''}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `ERP_Report_${start}_${end}.csv`);
+            a.click();
+        };
+
+        window.populateBulkSubLocations = function() {
+            const branchId = document.getElementById('bulk-target').value;
+            const subSelect = document.getElementById('bulk-subloc');
+            if(!branchId) {
+                subSelect.innerHTML = ''; return;
+            }
+            const user = globalUsers.find(u => u.id === branchId);
+            const subs = (user && user.subLocations) ? user.subLocations : { 'default': 'Default' };
+            subSelect.innerHTML = Object.entries(subs).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+        };
+
+        window.executeBulkUpload = async function() {
+            const text = document.getElementById('bulk-data').value;
+            const list = text.split(/[\n, \t]+/).map(s => s.trim().toUpperCase()).filter(s => s.length > 5);
+            if(list.length === 0) return showToast("No valid chassis numbers found.", "error");
+
+            const targetBranch = document.getElementById('bulk-target').value;
+            const targetSubLoc = document.getElementById('bulk-subloc').value;
+            if(!targetBranch || !targetSubLoc) return showToast("Please select a target physical branch and godown.", "error");
+
+            const remark = document.getElementById('bulk-remark').value || "Bulk Stock-In";
+            const confirmed = await customConfirm(`Stock-In ${list.length} items to ${getLocName(targetBranch, targetSubLoc)}?`);
+            if(!confirmed) return;
+
+            const btn = document.getElementById('btn-bulk');
+            btn.disabled = true; btn.innerHTML = 'Processing...';
+
+            try {
+                let updates = {};
+                const timestamp = new Date().toISOString();
+                const date = getTodayLocal();
+
+                list.forEach(chassis => {
+                    const masterData = globalMasterVehicles[chassis] || { modelName: "UNKNOWN MODEL", engineNo: "UNKNOWN", colour: "UNKNOWN", modelVariant: "", mtoc: "" };
+                    
+                    updates[`vehicles/${chassis}`] = {
+                        chassisNo: chassis, ...masterData, status: 'In Stock', currentLocation: targetBranch, currentSubLocation: targetSubLoc, lastUpdated: timestamp
+                    };
+                    const logKey = push(ref(db, 'transactions')).key;
+                    updates[`transactions/${logKey}`] = {
+                        chassisNo: chassis, modelName: masterData.modelName, type: 'IN', date: date,
+                        fromLocation: 'Supplier', fromSubLocation: '',
+                        toLocation: targetBranch, toSubLocation: targetSubLoc,
+                        remark: remark, performedBy: activeUser.locationName + ' (Bulk)', timestamp: timestamp
+                    };
+                });
+
+                await update(ref(db), updates);
+                showToast(`Bulk upload successful! (${list.length} frames)`);
+                document.getElementById('bulk-data').value = '';
+                document.getElementById('bulk-remark').value = '';
+            } catch (err) {
+                showToast(err.message, "error");
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="ph-bold ph-upload-simple"></i> Execute Bulk Stock-In';
+            }
+        };
+
+        window.executeMasterUpload = async function() {
+            if (!auth.currentUser || activeUser.role !== 'superadmin') return;
+            const textData = document.getElementById('masterDataInput').value.trim();
+            if (!textData) return showToast("Please paste data from Excel first.", "error");
+
+            const rows = textData.split('\n');
+            if (rows.length === 0) return;
+
+            const confirmed = await customConfirm(`Process and upload ${rows.length} rows to the Master Database?`);
+            if (!confirmed) return;
+
+            const btn = document.getElementById('btnUploadMaster');
+            btn.disabled = true; btn.innerHTML = 'Processing...';
+
+            try {
+                const updates = {};
+                let processedCount = 0;
+
+                rows.forEach(row => {
+                    const cols = row.split('\t').map(c => c.trim());
+                    if (cols.length < 10) return; 
+                    
+                    const chassisNo = cols[9].toUpperCase();
+                    if (chassisNo === 'CHASSIS NO.' || chassisNo === 'CHASSIS NO' || !chassisNo) return;
+
+                    updates[chassisNo] = {
+                        sn: cols[0] || "", hmsiOther: cols[1] || "", receivedDate: cols[2] || "", invoiceDate: cols[3] || "",
+                        mfgDate: cols[4] || "", modelName: cols[5] || "", modelVariant: cols[6] || "", colour: cols[7] || "",
+                        mtoc: cols[8] || "", chassisNo: chassisNo, engineNo: cols[10] || "", type: cols[11] || "",
+                        hmsiInvAmount: cols[12] || "", taxableHmsiInvAmount: cols[13] || ""
+                    };
+                    processedCount++;
+                });
+
+                if (processedCount === 0) {
+                    showToast("No valid rows found. Check column format.", "error"); return;
+                }
+
+                await update(ref(db, 'master_vehicles'), updates);
+                showToast(`Success! Added/Updated ${processedCount} vehicles in Master DB.`);
+                document.getElementById('masterDataInput').value = '';
+                
+            } catch (error) {
+                showToast("Error updating Master DB: " + error.message, "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-database text-lg"></i> Process & Upload Master Data';
+            }
+        };
+
+        window.handleChangeName = async function(e) {
+            e.preventDefault();
+            const newName = document.getElementById('profile-name-input').value.trim();
+            if(!newName) return showToast("Name cannot be empty", "error");
+
+            try {
+                await update(ref(db, `locations/${activeUser.id}`), { locationName: newName });
+                showToast("Profile Name Updated Successfully!");
+                activeUser.locationName = newName;
+                setupUIForUser();
+            } catch(err) {
+                showToast("Failed to update name", "error");
+            }
+        };
+
+        window.handleChangePin = async function(e) {
+            e.preventDefault();
+            const n = document.getElementById('pin-new').value;
+            const c = document.getElementById('pin-confirm').value;
+            if(n !== c) return showToast("PINs do not match", "error");
+            if(n.length < 4) return showToast("PIN too short", "error");
+
+            try {
+                await update(ref(db, `locations/${activeUser.id}`), { pin: n });
+                showToast("PIN Updated Successfully!");
+                document.getElementById('pin-new').value = ''; document.getElementById('pin-confirm').value = '';
+                activeUser.pin = n;
+            } catch(err) {
+                showToast("Failed to update PIN", "error");
+            }
+        };
+
+        window.renderSettingsSubLocations = function() {
+            const list = document.getElementById('settings-subloc-list');
+            const subs = activeUser.subLocations || { 'default': 'Default' };
+            
+            list.innerHTML = Object.entries(subs).map(([key, name]) => `
+                <li class="flex justify-between items-center bg-slate-50 px-4 py-3 rounded-lg border border-slate-200">
+                    <span class="font-medium text-slate-700 text-sm">${name}</span>
+                    ${key !== 'default' ? `<button type="button" onclick="removeSubLocation('${key}')" class="text-rose-500 hover:bg-rose-100 p-2 rounded transition-colors"><i class="ph-bold ph-trash"></i></button>` : '<span class="text-[10px] text-primary-600 bg-primary-100 px-2 py-0.5 rounded uppercase font-bold tracking-wide border border-primary-200">Default Base</span>'}
+                </li>
+            `).join('');
+        };
+
+        window.addSubLocation = async function() {
+            const input = document.getElementById('new-subloc-input');
+            const name = input.value.trim();
+            if(!name) return showToast("Enter a location name", "error");
+
+            const key = 'sub_' + Date.now().toString(36);
+            const currentSubs = activeUser.subLocations || { 'default': 'Default' };
+            currentSubs[key] = name;
+
+            try {
+                await update(ref(db, `locations/${activeUser.id}/subLocations`), currentSubs);
+                showToast(`Sub-location '${name}' added!`);
+                input.value = '';
+            } catch(e) {
+                showToast("Error adding sub-location", "error");
+            }
+        };
+
+        window.removeSubLocation = async function(key) {
+            if(key === 'default') return;
+            const confirmed = await customConfirm("Remove this sub-location? History logs will keep the ID.");
+            if(!confirmed) return;
+
+            try {
+                await remove(ref(db, `locations/${activeUser.id}/subLocations/${key}`));
+                showToast("Sub-location removed successfully");
+            } catch(e) {
+                showToast("Error removing sub-location", "error");
+            }
+        };
+
+        function renderAdminUsersTable() {
+            if(!activeUser || activeUser.role !== 'superadmin') return;
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '';
+            
+            globalUsers.forEach(u => {
+                const roleBadge = u.role === 'superadmin' ? 'bg-amber-100 text-amber-700' : u.role === 'admin' ? 'bg-primary-100 text-primary-700' : 'bg-emerald-100 text-emerald-700';
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="font-bold text-slate-700 font-mono text-xs">${u.id}</td>
+                        <td class="font-semibold text-slate-800 text-xs">${u.locationName}</td>
+                        <td><span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${roleBadge}">${u.role}</span></td>
+                        <td class="text-right">
+                            ${u.id !== activeUser.id ? `
+                            <button onclick="handleDeleteUser('${u.id}')" class="text-rose-500 hover:bg-rose-50 p-2 rounded transition-colors">
+                                <i class="ph-bold ph-trash text-lg"></i>
+                            </button>
+                            ` : '<span class="text-[10px] text-slate-400 font-medium">CURRENT</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.handleCreateUser = async function(e) {
+            e.preventDefault();
+            if (!auth.currentUser || activeUser.role !== 'superadmin') return;
+
+            const id = document.getElementById('new-user-id').value.trim().toUpperCase();
+            const name = document.getElementById('new-user-name').value.trim();
+            const role = document.getElementById('new-user-role').value;
+            const pin = document.getElementById('new-user-pin').value;
+
+            if(globalUsers.some(u => u.id === id)) return showToast(`User ID '${id}' already exists!`, "error");
+
+            try {
+                await set(ref(db, `locations/${id}`), { 
+                    locationName: name, role: role, pin: pin, subLocations: { 'default': 'Default' } 
+                });
+                showToast(`User ${name} created successfully.`);
+                e.target.reset();
+            } catch (err) {
+                showToast("Error creating user.", "error");
+            }
+        };
+
+        window.handleDeleteUser = async function(userId) {
+            if (!auth.currentUser || activeUser.role !== 'superadmin') return;
+            const confirmed = await customConfirm(`Are you sure you want to completely remove branch ID: ${userId}?`);
+            if(!confirmed) return;
+
+            try {
+                await remove(ref(db, 'locations/' + userId));
+                showToast(`Branch ${userId} deleted.`);
+            } catch (err) {
+                showToast("Error deleting branch: " + err.message, "error");
+            }
+        };
+    </script>
+</body>
+</html>
