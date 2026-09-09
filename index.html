@@ -89,15 +89,16 @@
         .tab-btn.active { border-bottom-color: #4f46e5; color: #4f46e5; }
         .tab-btn:hover:not(.active) { color: #1e293b; }
         
-        /* Pivot Table Specific Styles (Old School Tabular format) */
-        .pivot-table { border-collapse: collapse; width: 100%; }
-        .pivot-table th, .pivot-table td { border: 1px solid #cbd5e1; padding: 0.4rem 0.75rem; vertical-align: middle; }
+        /* Pivot Table Specific Styles (Fixed for compact width) */
+        .pivot-wrapper { width: 100%; overflow-x: auto; border-radius: 0.5rem; }
+        .pivot-table { border-collapse: collapse; width: max-content; background-color: white; margin-bottom: 1rem; }
+        .pivot-table th, .pivot-table td { border: 1px solid #cbd5e1; padding: 0.6rem 1.5rem; vertical-align: middle; white-space: nowrap; }
         .pivot-table thead th { background-color: #2563eb; color: white; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-color: #1d4ed8; }
-        .pivot-table .model-row td { background-color: #f1f5f9; font-weight: 700; color: #1e293b; border-bottom: 2px solid #cbd5e1; }
-        .pivot-table .variant-row td { background-color: #ffffff; font-weight: 600; color: #334155; }
-        .pivot-table .colour-row td { background-color: #ffffff; color: #475569; font-size: 0.8rem; }
-        .pivot-table .subtotal-row td { background-color: #eff6ff; font-weight: 700; color: #1e40af; font-size: 0.8rem; border-top: 1px solid #bfdbfe; }
-        .pivot-table .grand-total-row td { background-color: #1e293b; color: white; font-weight: 800; font-size: 0.9rem; border-color: #0f172a; }
+        .pivot-table .model-row { background-color: #f8fafc; font-weight: 700; color: #1e293b; border-bottom: 1px solid #cbd5e1; }
+        .pivot-table .variant-row { font-weight: 600; color: #334155; }
+        .pivot-table .colour-row { color: #475569; font-size: 0.85rem; }
+        .pivot-table .subtotal-row td { background-color: #eff6ff; font-weight: 700; color: #1d4ed8; font-size: 0.8rem; border-top: 2px solid #bfdbfe; }
+        .pivot-table .grand-total-row td { background-color: #1e293b; color: white; font-weight: 800; font-size: 0.95rem; border-color: #0f172a; }
 
     </style>
 </head>
@@ -463,7 +464,7 @@
                     </div>
                     <!-- Pivot Table -->
                     <div class="bg-white border border-slate-200 rounded-b-xl overflow-hidden flex-1 flex flex-col shadow-sm">
-                        <div class="overflow-auto flex-1">
+                        <div class="overflow-auto flex-1 pivot-wrapper">
                             <table class="pivot-table">
                                 <thead id="ls-pivot-head" class="sticky top-0 shadow-sm z-10">
                                     <!-- Populated by JS -->
@@ -1657,16 +1658,16 @@
             const reportType = document.getElementById('ls-pivot-report-type')?.value || 'model';
             
             let headHtml = `<tr>
-                <th class="text-left w-1/4 bg-primary-600 text-white">Model</th>
-                <th class="text-left w-1/4 bg-primary-600 text-white">Variant</th>`;
+                <th class="text-left px-4 py-3 bg-primary-600 text-white">MODEL</th>
+                <th class="text-left px-4 py-3 bg-primary-600 text-white">VARIANT</th>`;
             
             if (reportType === 'variant') {
-                headHtml += `<th class="text-left w-1/4 bg-primary-600 text-white">Colour</th>`;
+                headHtml += `<th class="text-left px-4 py-3 bg-primary-600 text-white">COLOUR</th>`;
             }
             
-            columns.forEach(c => { headHtml += `<th class="text-center bg-primary-600 text-white">${c.name}</th>`; });
+            columns.forEach(c => { headHtml += `<th class="text-center px-4 py-3 bg-primary-600 text-white">${c.name.toUpperCase()}</th>`; });
             if (showTotalCol) {
-                headHtml += `<th class="text-center bg-brand-900 text-white w-24">Total</th>`;
+                headHtml += `<th class="text-center px-4 py-3 bg-primary-700 text-white font-bold w-24">TOTAL</th>`;
             }
             headHtml += `</tr>`;
             thead.innerHTML = headHtml;
@@ -1705,15 +1706,15 @@
                         
                         sortedColours.forEach(col => {
                             const cData = vData.colours[col];
-                            let cRow = `<tr class="colour-row">`;
+                            let cRow = `<tr class="hover:bg-slate-50">`;
                             
                             if (isFirstVariantOfModel && isFirstColourOfVariant) {
-                                cRow += `<td class="model-row" rowspan="${modelRowSpan}"><i class="ph-bold ph-minus-square mr-1 text-slate-400"></i>${model}</td>`;
+                                cRow += `<td class="model-row align-top" rowspan="${modelRowSpan}"><i class="ph-bold ph-minus-square mr-1 text-slate-400"></i>${model}</td>`;
                             }
                             if (isFirstColourOfVariant) {
-                                cRow += `<td class="variant-row" rowspan="${variantRowSpan}">${vari}</td>`;
+                                cRow += `<td class="variant-row align-top" rowspan="${variantRowSpan}">${vari}</td>`;
                             }
-                            cRow += `<td>${col}</td>`;
+                            cRow += `<td class="colour-row">${col}</td>`;
                             
                             columns.forEach(c => { 
                                 const val = cData.locs[c.key] || '';
@@ -1731,7 +1732,8 @@
                         });
                         
                         let subRow = `<tr class="subtotal-row">`;
-                        subRow += `<td colspan="2" class="text-right uppercase tracking-wider text-[10px]">Variant Total</td>`;
+                        // Colspan 2 merges Variant + Colour (Model column is still rowspan to the left)
+                        subRow += `<td colspan="2" class="text-right uppercase tracking-wider text-[10px]">VARIANT TOTAL</td>`;
                         columns.forEach(c => { 
                             const val = vData.locs[c.key] || '';
                             subRow += `<td class="text-center">${val}</td>`; 
@@ -1742,21 +1744,39 @@
                         subRow += `</tr>`;
                         tbody.innerHTML += subRow;
                     });
+                    
+                    // Model Subtotal Row
+                    let mSubRow = `<tr class="subtotal-row">`;
+                    // Colspan 3 merges Model + Variant + Colour (Model rowspan has ended)
+                    mSubRow += `<td colspan="3" class="text-right uppercase tracking-wider text-[11px] text-primary-700 font-bold">${model} TOTAL</td>`;
+                    
+                    columns.forEach(c => { 
+                        const val = mData.locs[c.key] || '';
+                        mSubRow += `<td class="text-center text-primary-700 font-bold">${val}</td>`; 
+                    });
+                    
+                    if (showTotalCol) {
+                        mSubRow += `<td class="text-center text-primary-700 font-bold">${mData.total}</td>`;
+                    }
+                    
+                    mSubRow += `</tr>`;
+                    tbody.innerHTML += mSubRow;
+
                 } else {
                     // --- NEW MODEL-WISE LOGIC ---
-                    let modelRowSpan = sortedVariants.length + 1; // +1 for Model Total
+                    let modelRowSpan = sortedVariants.length; // Does not include Model Total row
 
                     let isFirstVariantOfModel = true;
                     
                     sortedVariants.forEach(vari => {
                         const vData = mData.variants[vari];
-                        let cRow = `<tr class="variant-row">`;
+                        let cRow = `<tr class="hover:bg-slate-50">`;
                         
                         if (isFirstVariantOfModel) {
-                            cRow += `<td class="model-row" rowspan="${modelRowSpan}"><i class="ph-bold ph-minus-square mr-1 text-slate-400"></i>${model}</td>`;
+                            cRow += `<td class="model-row align-top" rowspan="${modelRowSpan}"><i class="ph-bold ph-minus-square mr-1 text-slate-400"></i>${model}</td>`;
                         }
                         
-                        cRow += `<td>${vari}</td>`;
+                        cRow += `<td class="variant-row">${vari}</td>`;
                         
                         columns.forEach(c => { 
                             const val = vData.locs[c.key] || '';
@@ -1774,15 +1794,16 @@
                     
                     // Model Subtotal Row
                     let subRow = `<tr class="subtotal-row">`;
-                    subRow += `<td class="text-right uppercase tracking-wider text-[10px]">Model Total</td>`;
+                    // Colspan 2 merges Model + Variant
+                    subRow += `<td colspan="2" class="text-right uppercase tracking-wider text-[11px] text-primary-700 font-bold">${model} TOTAL</td>`;
                     
                     columns.forEach(c => { 
                         const val = mData.locs[c.key] || '';
-                        subRow += `<td class="text-center text-primary-700">${val}</td>`; 
+                        subRow += `<td class="text-center text-primary-700 font-bold">${val}</td>`; 
                     });
                     
                     if (showTotalCol) {
-                        subRow += `<td class="text-center text-primary-700">${mData.total}</td>`;
+                        subRow += `<td class="text-center text-primary-700 font-bold">${mData.total}</td>`;
                     }
                     
                     subRow += `</tr>`;
@@ -1792,10 +1813,10 @@
 
             // Grand Total Row
             let tRow = `<tr class="grand-total-row">`;
-            tRow += `<td colspan="${reportType === 'variant' ? 3 : 2}" class="text-right uppercase tracking-widest text-sm">Grand Total</td>`;
-            columns.forEach(c => { tRow += `<td class="text-center">${colTotals[c.key] || 0}</td>`; });
+            tRow += `<td colspan="${reportType === 'variant' ? 3 : 2}" class="text-right uppercase tracking-widest text-sm font-black p-3">Grand Total</td>`;
+            columns.forEach(c => { tRow += `<td class="text-center font-bold text-lg">${colTotals[c.key] || 0}</td>`; });
             if (showTotalCol) {
-                tRow += `<td class="text-center text-lg">${grandTotal}</td>`;
+                tRow += `<td class="text-center font-black text-xl">${grandTotal}</td>`;
             }
             tRow += `</tr>`;
             tbody.innerHTML += tRow;
