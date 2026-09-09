@@ -93,10 +93,10 @@
         .pivot-table { border-collapse: collapse; width: 100%; }
         .pivot-table th, .pivot-table td { border: 1px solid #cbd5e1; padding: 0.4rem 0.75rem; vertical-align: middle; }
         .pivot-table thead th { background-color: #2563eb; color: white; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-color: #1d4ed8; }
-        .pivot-table .model-row td { background-color: #f1f5f9; font-weight: 700; color: #1e293b; }
+        .pivot-table .model-row td { background-color: #f1f5f9; font-weight: 700; color: #1e293b; border-bottom: 2px solid #cbd5e1; }
         .pivot-table .variant-row td { background-color: #ffffff; font-weight: 600; color: #334155; }
         .pivot-table .colour-row td { background-color: #ffffff; color: #475569; font-size: 0.8rem; }
-        .pivot-table .subtotal-row td { background-color: #e2e8f0; font-weight: 700; color: #0f172a; font-size: 0.8rem; }
+        .pivot-table .subtotal-row td { background-color: #eff6ff; font-weight: 700; color: #1e40af; font-size: 0.8rem; border-top: 1px solid #bfdbfe; }
         .pivot-table .grand-total-row td { background-color: #1e293b; color: white; font-weight: 800; font-size: 0.9rem; border-color: #0f172a; }
 
     </style>
@@ -450,6 +450,13 @@
                                 <select id="ls-pivot-view-type" onchange="renderLiveStockPivot()" class="input-field py-1.5 min-w-[180px] bg-slate-50">
                                     <option value="breakdown">Location Breakdown</option>
                                     <option value="total">Only Total</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label-text">Report Type</label>
+                                <select id="ls-pivot-report-type" onchange="renderLiveStockPivot()" class="input-field py-1.5 min-w-[180px] bg-slate-50">
+                                    <option value="model" selected>Model-wise (Default)</option>
+                                    <option value="variant">Colour & Variant-wise</option>
                                 </select>
                             </div>
                         </div>
@@ -1647,10 +1654,16 @@
 
             // Build Header
             const thead = document.getElementById('ls-pivot-head');
+            const reportType = document.getElementById('ls-pivot-report-type')?.value || 'model';
+            
             let headHtml = `<tr>
                 <th class="text-left w-1/4 bg-primary-600 text-white">Model</th>
-                <th class="text-left w-1/4 bg-primary-600 text-white">Variant</th>
-                <th class="text-left w-1/4 bg-primary-600 text-white">Colour</th>`;
+                <th class="text-left w-1/4 bg-primary-600 text-white">Variant</th>`;
+            
+            if (reportType === 'variant') {
+                headHtml += `<th class="text-left w-1/4 bg-primary-600 text-white">Colour</th>`;
+            }
+            
             columns.forEach(c => { headHtml += `<th class="text-center bg-primary-600 text-white">${c.name}</th>`; });
             if (showTotalCol) {
                 headHtml += `<th class="text-center bg-brand-900 text-white w-24">Total</th>`;
@@ -1658,12 +1671,13 @@
             headHtml += `</tr>`;
             thead.innerHTML = headHtml;
 
-            // Build Body (Old School Tabular Pivot)
+            // Build Body
             const tbody = document.getElementById('ls-pivot-body');
             tbody.innerHTML = '';
 
             if (Object.keys(pivotData).length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${columns.length + 4}" class="p-8 text-center text-slate-400 italic">No inventory available for pivot report.</td></tr>`;
+                const totalCols = reportType === 'variant' ? (columns.length + 4) : (columns.length + 3);
+                tbody.innerHTML = `<tr><td colspan="${totalCols}" class="p-8 text-center text-slate-400 italic">No inventory available for pivot report.</td></tr>`;
                 return;
             }
 
@@ -1673,75 +1687,112 @@
                 const mData = pivotData[model];
                 const sortedVariants = Object.keys(mData.variants).sort();
                 
-                let modelRowSpan = 0;
-                sortedVariants.forEach(vari => {
-                    modelRowSpan += Object.keys(mData.variants[vari].colours).length + 1; // +1 for Variant Total
-                });
+                if (reportType === 'variant') {
+                    // --- EXISTING VARIANT/COLOUR WISE LOGIC ---
+                    let modelRowSpan = 0;
+                    sortedVariants.forEach(vari => {
+                        modelRowSpan += Object.keys(mData.variants[vari].colours).length + 1; // +1 for Variant Total
+                    });
 
-                let isFirstVariantOfModel = true;
-                
-                sortedVariants.forEach(vari => {
-                    const vData = mData.variants[vari];
-                    const sortedColours = Object.keys(vData.colours).sort();
-                    const variantRowSpan = sortedColours.length; 
+                    let isFirstVariantOfModel = true;
                     
-                    let isFirstColourOfVariant = true;
-                    
-                    sortedColours.forEach(col => {
-                        const cData = vData.colours[col];
-                        let cRow = `<tr class="colour-row">`;
+                    sortedVariants.forEach(vari => {
+                        const vData = mData.variants[vari];
+                        const sortedColours = Object.keys(vData.colours).sort();
+                        const variantRowSpan = sortedColours.length; 
                         
-                        // Model Cell (Merged)
-                        if (isFirstVariantOfModel && isFirstColourOfVariant) {
+                        let isFirstColourOfVariant = true;
+                        
+                        sortedColours.forEach(col => {
+                            const cData = vData.colours[col];
+                            let cRow = `<tr class="colour-row">`;
+                            
+                            if (isFirstVariantOfModel && isFirstColourOfVariant) {
+                                cRow += `<td class="model-row" rowspan="${modelRowSpan}"><i class="ph-bold ph-minus-square mr-1 text-slate-400"></i>${model}</td>`;
+                            }
+                            if (isFirstColourOfVariant) {
+                                cRow += `<td class="variant-row" rowspan="${variantRowSpan}">${vari}</td>`;
+                            }
+                            cRow += `<td>${col}</td>`;
+                            
+                            columns.forEach(c => { 
+                                const val = cData.locs[c.key] || '';
+                                cRow += `<td class="text-center">${val}</td>`; 
+                            });
+                            
+                            if (showTotalCol) {
+                                cRow += `<td class="text-center font-bold text-slate-700 bg-slate-50">${cData.total || ''}</td>`;
+                            }
+                            cRow += `</tr>`;
+                            tbody.innerHTML += cRow;
+                            
+                            isFirstColourOfVariant = false;
+                            isFirstVariantOfModel = false;
+                        });
+                        
+                        let subRow = `<tr class="subtotal-row">`;
+                        subRow += `<td colspan="2" class="text-right uppercase tracking-wider text-[10px]">Variant Total</td>`;
+                        columns.forEach(c => { 
+                            const val = vData.locs[c.key] || '';
+                            subRow += `<td class="text-center">${val}</td>`; 
+                        });
+                        if (showTotalCol) {
+                            subRow += `<td class="text-center">${vData.total}</td>`;
+                        }
+                        subRow += `</tr>`;
+                        tbody.innerHTML += subRow;
+                    });
+                } else {
+                    // --- NEW MODEL-WISE LOGIC ---
+                    let modelRowSpan = sortedVariants.length + 1; // +1 for Model Total
+
+                    let isFirstVariantOfModel = true;
+                    
+                    sortedVariants.forEach(vari => {
+                        const vData = mData.variants[vari];
+                        let cRow = `<tr class="variant-row">`;
+                        
+                        if (isFirstVariantOfModel) {
                             cRow += `<td class="model-row" rowspan="${modelRowSpan}"><i class="ph-bold ph-minus-square mr-1 text-slate-400"></i>${model}</td>`;
                         }
                         
-                        // Variant Cell (Merged)
-                        if (isFirstColourOfVariant) {
-                            cRow += `<td class="variant-row" rowspan="${variantRowSpan}">${vari}</td>`;
-                        }
+                        cRow += `<td>${vari}</td>`;
                         
-                        // Colour Cell
-                        cRow += `<td>${col}</td>`;
-                        
-                        // Location Data Cells
                         columns.forEach(c => { 
-                            const val = cData.locs[c.key] || '';
+                            const val = vData.locs[c.key] || '';
                             cRow += `<td class="text-center">${val}</td>`; 
                         });
                         
-                        // Total Data Cell
                         if (showTotalCol) {
-                            cRow += `<td class="text-center font-bold text-slate-700 bg-slate-50">${cData.total || ''}</td>`;
+                            cRow += `<td class="text-center font-bold text-slate-700 bg-slate-50">${vData.total || ''}</td>`;
                         }
-                        
                         cRow += `</tr>`;
                         tbody.innerHTML += cRow;
                         
-                        isFirstColourOfVariant = false;
                         isFirstVariantOfModel = false;
                     });
                     
-                    // Variant Subtotal Row
+                    // Model Subtotal Row
                     let subRow = `<tr class="subtotal-row">`;
-                    subRow += `<td colspan="2" class="text-right uppercase tracking-wider text-[10px]">Variant Total</td>`;
+                    subRow += `<td class="text-right uppercase tracking-wider text-[10px]">Model Total</td>`;
                     
                     columns.forEach(c => { 
-                        const val = vData.locs[c.key] || '';
-                        subRow += `<td class="text-center">${val}</td>`; 
+                        const val = mData.locs[c.key] || '';
+                        subRow += `<td class="text-center text-primary-700">${val}</td>`; 
                     });
                     
                     if (showTotalCol) {
-                        subRow += `<td class="text-center">${vData.total}</td>`;
+                        subRow += `<td class="text-center text-primary-700">${mData.total}</td>`;
                     }
                     
                     subRow += `</tr>`;
                     tbody.innerHTML += subRow;
-                });
+                }
             });
 
             // Grand Total Row
-            let tRow = `<tr class="grand-total-row"><td colspan="3" class="text-right uppercase tracking-widest text-sm">Grand Total</td>`;
+            let tRow = `<tr class="grand-total-row">`;
+            tRow += `<td colspan="${reportType === 'variant' ? 3 : 2}" class="text-right uppercase tracking-widest text-sm">Grand Total</td>`;
             columns.forEach(c => { tRow += `<td class="text-center">${colTotals[c.key] || 0}</td>`; });
             if (showTotalCol) {
                 tRow += `<td class="text-center text-lg">${grandTotal}</td>`;
