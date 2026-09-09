@@ -2051,12 +2051,31 @@
                     const chassisNo = cols[9].toUpperCase();
                     if (chassisNo === 'CHASSIS NO.' || chassisNo === 'CHASSIS NO' || !chassisNo) return;
 
-                    updates[chassisNo] = {
+                    // 1. Update Master Database
+                    updates[`master_vehicles/${chassisNo}`] = {
                         sn: cols[0] || "", hmsiOther: cols[1] || "", receivedDate: cols[2] || "", invoiceDate: cols[3] || "",
                         mfgDate: cols[4] || "", modelName: cols[5] || "", modelVariant: cols[6] || "", colour: cols[7] || "",
                         mtoc: cols[8] || "", chassisNo: chassisNo, engineNo: cols[10] || "", type: cols[11] || "",
                         hmsiInvAmount: cols[12] || "", taxableHmsiInvAmount: cols[13] || ""
                     };
+
+                    // 2. Auto-Fix existing UNKNOWN vehicles in Live Stock
+                    const liveRec = globalVehicles.find(v => v.chassisNo === chassisNo);
+                    if (liveRec) {
+                        updates[`vehicles/${chassisNo}/modelName`] = cols[5] || "UNKNOWN MODEL";
+                        updates[`vehicles/${chassisNo}/modelVariant`] = cols[6] || "";
+                        updates[`vehicles/${chassisNo}/colour`] = cols[7] || "UNKNOWN COLOUR";
+                        updates[`vehicles/${chassisNo}/mtoc`] = cols[8] || "";
+                        updates[`vehicles/${chassisNo}/engineNo`] = cols[10] || "";
+                    }
+
+                    // 3. Auto-Fix existing UNKNOWN models in Transaction History
+                    globalTxns.forEach(txn => {
+                        if (txn.chassisNo === chassisNo && (txn.modelName === 'UNKNOWN MODEL' || !txn.modelName)) {
+                            updates[`transactions/${txn.id}/modelName`] = cols[5] || "UNKNOWN MODEL";
+                        }
+                    });
+
                     processedCount++;
                 });
 
@@ -2064,8 +2083,9 @@
                     showToast("No valid rows found. Check column format.", "error"); return;
                 }
 
-                await update(ref(db, 'master_vehicles'), updates);
-                showToast(`Success! Added/Updated ${processedCount} vehicles in Master DB.`);
+                // Push all updates to database simultaneously
+                await update(ref(db), updates); 
+                showToast(`Success! Added ${processedCount} vehicles & Auto-fixed existing stock.`);
                 document.getElementById('masterDataInput').value = '';
                 
             } catch (error) {
