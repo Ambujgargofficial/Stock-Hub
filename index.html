@@ -147,6 +147,21 @@
             .app-view .rounded-2xl, .app-view .rounded-xl { border-radius: 1rem; }
             #app-sidebar { max-width: 78vw; }
 
+            #dispatch-form { padding: 0.9rem; }
+            #dispatch-form > h3 { display: none; }
+            #dispatch-form > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 0.7rem; margin-bottom: 0; }
+            #dispatch-form > .grid > #remark-div { grid-column: 1 / -1; }
+            #dispatch-form .label-text { font-size: 0.65rem; margin-bottom: 0.2rem; }
+            #dispatch-form .input-field { padding: 0.55rem 0.65rem; font-size: 0.8rem; }
+
+            #txn-modal { padding: 0.65rem; }
+            #txn-modal > div { max-height: calc(100dvh - 1.3rem); }
+            #txn-modal-content { padding: 1rem; gap: 1rem; overflow-y: auto; }
+            #txn-modal-content .grid { gap: 1rem 0.75rem; }
+            #txn-modal-content .text-lg { font-size: 1rem; }
+            #txn-modal-footer { padding: 0.75rem 1rem; flex-shrink: 0; }
+            #txn-modal-footer .btn-secondary { width: 100%; }
+
             #view-reports { gap: 0.75rem; }
             #view-reports > .flex.justify-between.items-end { flex-direction: row; align-items: center; gap: 0.5rem; }
             #view-reports > .flex.justify-between.items-end h2 { font-size: 1.15rem; }
@@ -4747,9 +4762,9 @@ EV,QC1,Screen Protector,Genuine,8714,290,18..." class="w-full p-3 font-mono text
 
     <!-- VEHICLE TXN DETAILS MODAL -->
     <div id="txn-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[1000] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden animate-[slideIn_0.2s_ease]">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-[slideIn_0.2s_ease]">
             <div class="bg-slate-800 px-6 py-4 flex justify-between items-center text-white"><h3 class="font-bold flex items-center gap-2"><i class="ph ph-receipt"></i> Transaction Details</h3><button onclick="window.closeModal()" class="text-slate-300 hover:text-white transition-colors cursor-pointer"><i class="ph ph-x text-xl"></i></button></div>
-            <div class="p-6 md:p-8 space-y-6">
+            <div id="txn-modal-content" class="p-6 md:p-8 space-y-6 overflow-y-auto">
                 <div class="grid grid-cols-2 gap-y-6">
                     <div><span class="label-text text-[10px]">Date & Time</span><span id="mod-date" class="font-bold text-slate-800 text-sm"></span></div>
                     <div><span class="label-text text-[10px]">Type</span><span id="mod-type" class="font-black text-primary-600 text-sm tracking-wide"></span></div>
@@ -4763,8 +4778,8 @@ EV,QC1,Screen Protector,Genuine,8714,290,18..." class="w-full p-3 font-mono text
                     <div class="col-span-2"><span class="label-text text-[10px] mb-1">Location Movement</span><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 font-bold text-slate-800 text-sm flex items-center flex-wrap gap-2"><span id="mod-from"></span><i id="mod-arrow" class="ph-bold ph-arrow-right text-slate-400 hidden mx-1"></i><span id="mod-to" class="hidden text-primary-700"></span></div></div>
                     <div class="col-span-2"><span class="label-text text-[10px]">Remarks</span><div id="mod-remark" class="text-sm text-slate-600 font-medium bg-amber-50 p-3 rounded-lg border border-amber-100 mt-1"></div></div>
                 </div>
-                <div class="pt-6 text-right border-t border-slate-100 mt-2"><button onclick="window.closeModal()" class="btn-secondary px-8 w-full sm:w-auto">Close Window</button></div>
             </div>
+            <div id="txn-modal-footer" class="p-4 text-right border-t border-slate-100"><button onclick="window.closeModal()" class="btn-secondary px-8 w-full sm:w-auto">Close Window</button></div>
         </div>
     </div>
 
